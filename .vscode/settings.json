@@ -2,6 +2,7 @@
     "cmake.configureOnOpen": true,
     "files.associations": {
         "vector": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "numeric": "cpp"
     }
 }

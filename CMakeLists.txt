@@ -5,7 +5,7 @@ project(lane-detection)
 find_package( OpenCV REQUIRED )
 include_directories((src/include))
 
-# include_directories(source)
+include_directories(source)
 
 add_executable(Runner
   main.cpp

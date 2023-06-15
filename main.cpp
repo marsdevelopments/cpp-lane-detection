@@ -1,4 +1,11 @@
-/// Use this file with videos ///
+
+
+int main()
+{
+    return 0;
+}
+
+#ifdef 0
 
 #include "lane-detection.h"
 
@@ -68,3 +75,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+#endif

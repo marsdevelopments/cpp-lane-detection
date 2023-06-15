@@ -1,6 +1,6 @@
-^C:\USERS\ADMIN\DESKTOP\LANE-DETECTION-CPP-MASTER\BUILD\CMAKEFILES\63593A396B56A1C6F6D79A7D9921A07C\GENERATE.STAMP.RULE
+^C:\USERS\ADMIN\DEV\PROJECTS\CPP-LANE-DETECTION\BUILD\CMAKEFILES\818423B430EDEBC439A0E40BC3219793\GENERATE.STAMP.RULE
 setlocal
-C:\Users\Admin\dev\tools\cmake\bin\cmake.exe -SC:/Users/Admin/Desktop/lane-detection-cpp-master -BC:/Users/Admin/Desktop/lane-detection-cpp-master/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Admin/Desktop/lane-detection-cpp-master/build/lane-detection.sln
+C:\Users\Admin\dev\tools\cmake\bin\cmake.exe -SC:/Users/Admin/dev/projects/cpp-lane-detection -BC:/Users/Admin/dev/projects/cpp-lane-detection/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/Admin/dev/projects/cpp-lane-detection/build/lane-detection.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
