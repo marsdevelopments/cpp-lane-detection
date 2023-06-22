@@ -3,7 +3,7 @@
 #include <vector>
 #include <numeric>
 
-#include "constants.h"
+#include "constants.hpp"
 
 LaneDetection::LaneDetection()
 {
@@ -332,7 +332,7 @@ X LaneDetection::multiplyAndSum(std::vector<T> A, std::vector<T> B)
     {
         temp.push_back(A[i] * B[i]);
     }
-    sum = std::accumulate(temp.begin(), temp.end(), 0.0);
+    sum = std::accumulate(temp.begin(), temp.end(), 0);
 
     return sum;
 }

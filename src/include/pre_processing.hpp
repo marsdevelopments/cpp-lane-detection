@@ -2,7 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "constants.h"
+#include "constants.hpp"
 
 class PreProcessing
 {
@@ -109,13 +109,31 @@ private:
     cv::Mat frame_;
 
     const std::array<cv::Point, 8> points = {
-        cv::Point((cst::kVideoWidth * (1 - cst::kTrapezoidBottomWidth)) / 2 + cst::kTrapezoidOffsetX, cst::kVideoHeight),
-        cv::Point((cst::kVideoWidth * (1 - cst::kTrapezoidTopWidth)) / 2 + cst::kTrapezoidOffsetX, cst::kVideoHeight - cst::kVideoHeight * cst::kTrapezoidHeight),
-        cv::Point(cst::kVideoWidth - (cst::kVideoWidth * (1 - cst::kTrapezoidTopWidth)) / 2 + cst::kTrapezoidOffsetX, cst::kVideoHeight - cst::kVideoHeight * cst::kTrapezoidHeight),
-        cv::Point(cst::kVideoWidth - (cst::kVideoWidth * (1 - cst::kTrapezoidBottomWidth)) / 2 + cst::kTrapezoidOffsetX, cst::kVideoHeight),
+        // outer trapezoid
+        cv::Point(
+            static_cast<int>((cst::kVideoWidth * (1.0 - cst::kTrapezoidBottomWidth)) / 2.0) + cst::kTrapezoidOffsetX,
+            cst::kVideoHeight),
+        cv::Point(
+            static_cast<int>((cst::kVideoWidth * (1.0 - cst::kTrapezoidTopWidth)) / 2.0) + cst::kTrapezoidOffsetX,
+            cst::kVideoHeight - static_cast<int>(cst::kVideoHeight * cst::kTrapezoidHeight)),
+        cv::Point(
+            static_cast<int>(cst::kVideoWidth - (cst::kVideoWidth * (1.0 - cst::kTrapezoidTopWidth)) / 2.0) + cst::kTrapezoidOffsetX,
+            cst::kVideoHeight - static_cast<int>(cst::kVideoHeight * cst::kTrapezoidHeight)),
+        cv::Point(
+            static_cast<int>(cst::kVideoWidth - (cst::kVideoWidth * (1.0 - cst::kTrapezoidBottomWidth)) / 2.0) + cst::kTrapezoidOffsetX,
+            cst::kVideoHeight),
 
-        cv::Point((cst::kVideoWidth * (1 - cst::kTrapezoidBottomWidth * cst::kSmallBottomWidth)) / 2 + cst::kTrapezoidOffsetX, cst::kVideoHeight),
-        cv::Point((cst::kVideoWidth * (1 - cst::kTrapezoidTopWidth * cst::kSmallTopWidth)) / 2 + cst::kTrapezoidOffsetX, cst::kVideoHeight - cst::kVideoHeight * cst::kTrapezoidHeight * cst::kSmallHeight),
-        cv::Point(cst::kVideoWidth - (cst::kVideoWidth * (1 - cst::kTrapezoidTopWidth * cst::kSmallTopWidth)) / 2 + cst::kTrapezoidOffsetX, cst::kVideoHeight - cst::kVideoHeight * cst::kTrapezoidHeight * cst::kSmallHeight),
-        cv::Point(cst::kVideoWidth - (cst::kVideoWidth * (1 - cst::kTrapezoidBottomWidth * cst::kSmallBottomWidth)) / 2 + cst::kTrapezoidOffsetX, cst::kVideoHeight)};
+        // inner trapezoid
+        cv::Point(
+            static_cast<int>((cst::kVideoWidth * (1.0 - cst::kTrapezoidBottomWidth * cst::kSmallBottomWidth)) / 2.0) + cst::kTrapezoidOffsetX,
+            cst::kVideoHeight),
+        cv::Point(
+            static_cast<int>((cst::kVideoWidth * (1.0 - cst::kTrapezoidTopWidth * cst::kSmallTopWidth)) / 2.0) + cst::kTrapezoidOffsetX,
+            cst::kVideoHeight - static_cast<int>(cst::kVideoHeight * cst::kTrapezoidHeight * cst::kSmallHeight)),
+        cv::Point(
+            static_cast<int>(cst::kVideoWidth - (cst::kVideoWidth * (1.0 - cst::kTrapezoidTopWidth * cst::kSmallTopWidth)) / 2.0) + cst::kTrapezoidOffsetX,
+            cst::kVideoHeight - static_cast<int>(cst::kVideoHeight * cst::kTrapezoidHeight * cst::kSmallHeight)),
+        cv::Point(
+            static_cast<int>(cst::kVideoWidth - (cst::kVideoWidth * (1.0 - cst::kTrapezoidBottomWidth * cst::kSmallBottomWidth)) / 2.0) + cst::kTrapezoidOffsetX,
+            cst::kVideoHeight)};
 };
