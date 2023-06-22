@@ -10,7 +10,8 @@
 
 #include <cmath>
 #include "regression.h"
-using namespace cv;
+
+cv::Mat pre_process_frame(const cv::Mat& source);
 
 /**
  * @brief Apply grayscale transform on image.
@@ -18,7 +19,7 @@ using namespace cv;
  * @param source image that needs to be transformed
  * @return grayscale image
  */
-Mat applyGrayscale(Mat source);
+cv::Mat apply_grayscale(const cv::Mat& source);
 
 /**
  * @brief Apply Gaussian blur to image.
@@ -26,7 +27,15 @@ Mat applyGrayscale(Mat source);
  * @param source image that needs to be blurred
  * @return blurred image
  */
-Mat applyGaussianBlur(Mat source);
+cv::Mat apply_gaussian_blur(const cv::Mat& source);
+
+/**
+ * @brief Apply thresholding to image.
+ * 
+ * @param source image that needs to be thresholded
+ * @return thresholded image
+ */
+cv::Mat apply_thresholding(const cv::Mat& source);
 
 /**
  * @brief Detect edges of image by applying canny edge detection.
@@ -34,7 +43,7 @@ Mat applyGaussianBlur(Mat source);
  * @param source image of which the edges needs to be detected
  * @return image with detected edges
  */
-Mat applyCanny(Mat source);
+cv::Mat applyCanny(cv::Mat source);
 
 /**
  * @brief Filter source image so that only the white and yellow pixels remain.
@@ -46,7 +55,7 @@ Mat applyCanny(Mat source);
  * @see isDayTime
  * @return Mat filtered image
  */
-Mat filterColors(Mat source, bool isDayTime);
+cv::Mat filterColors(cv::Mat source, bool isDayTime);
 
 /**
  * @brief Apply an image mask. 
@@ -56,7 +65,7 @@ Mat filterColors(Mat source, bool isDayTime);
  * @param source image on which to apply the mask
  * @return Mat image with mask
  */
-Mat RegionOfInterest(Mat source);
+cv::Mat RegionOfInterest(cv::Mat source);
 
 /**
  * @brief Creates mask and blends it with source image so that the lanes
@@ -66,7 +75,7 @@ Mat RegionOfInterest(Mat source);
  * @param lines vector < vec4i > holding the lines
  * @return Mat image with lines drawn on it
  */
-Mat drawLanes(Mat source, std::vector<Vec4i> lines);
+cv::Mat drawLanes(cv::Mat source, std::vector<cv::Vec4i> lines);
 
 /**
  * @brief Returns a vector with the detected hough lines.
@@ -79,7 +88,7 @@ Mat drawLanes(Mat source, std::vector<Vec4i> lines);
  * @see applyCanny
  * @return vector<Vec4i> contains hough lines.
  */
-std::vector<Vec4i> houghLines(Mat canny, Mat source, bool drawHough);
+std::vector<cv::Vec4i> houghLines(cv::Mat canny, cv::Mat source, bool drawHough);
 
 /**
  * @brief Determine whether a picture is taken during day or night time.
@@ -91,6 +100,6 @@ std::vector<Vec4i> houghLines(Mat canny, Mat source, bool drawHough);
  * @return true 
  * @return false 
  */
-bool isDayTime(Mat source);
+bool isDayTime(cv::Mat source);
 
 #endif /*__LANE_DETECTION__*/

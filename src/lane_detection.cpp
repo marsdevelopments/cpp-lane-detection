@@ -1,33 +1,25 @@
-#include "lane-detection.h"
+#include "lane_detection.hpp"
 
-#include <cmath>
-
-#include <opencv2/video/tracking.hpp>
+#include <vector>
+#include <numeric>
 
 #include "constants.h"
 
-// #include <opencv2/line_descriptor/descriptor.hpp>
+LaneDetection::LaneDetection()
+{
+}
 
-using namespace cv;
+cv::Mat LaneDetection::find_lines(const cv::Mat &frame, const cv::Mat& edited_frame)
+{
+    frame_ = frame;
 
-constexpr size_t average_size = 5;
+    houghLines(edited_frame, true);
+    drawLanes();
 
-bool long_missing_flag = false;
-size_t missing_frames_counter = 0;
+    return frame_;
+}
 
-std::array<std::pair<int, int>, average_size> left_average = {{{0, 0},
-                                                               {0, 0},
-                                                               {0, 0},
-                                                               {0, 0},
-                                                               {0, 0}}};
-
-std::array<std::pair<int, int>, average_size> right_average = {{{0, 0},
-                                                                {0, 0},
-                                                                {0, 0},
-                                                                {0, 0},
-                                                                {0, 0}}};
-
-void clear_averages()
+void LaneDetection::clear_averages()
 {
     for (size_t i = 0; i < average_size; ++i)
     {
@@ -39,7 +31,7 @@ void clear_averages()
     }
 }
 
-void add_average(std::array<std::pair<int, int>, average_size> &source, int x1, int x2)
+void LaneDetection::add_average(std::array<std::pair<int, int>, average_size> &source, int x1, int x2)
 {
     for (size_t i = source.size() - 1, end = 1; i >= end; --i)
     {
@@ -49,7 +41,7 @@ void add_average(std::array<std::pair<int, int>, average_size> &source, int x1, 
     source[0] = {x1, x2};
 }
 
-std::pair<int, int> get_average(const std::array<std::pair<int, int>, average_size> &source)
+std::pair<int, int> LaneDetection::get_average(const std::array<std::pair<int, int>, average_size> &source)
 {
     std::pair<int, int> average;
 
@@ -74,100 +66,41 @@ std::pair<int, int> get_average(const std::array<std::pair<int, int>, average_si
     return average;
 }
 
-void display_selected_lines(const Mat image, const std::vector<Vec4i> lines)
-{
-    cv::Mat window(image);
-
-    for (auto line : lines)
-    {
-        cv::line(window, Point(line[0], line[1]), Point(line[2], line[3]), Scalar(0, 0, 255), 3, LINE_AA);
-    }
-
-    imshow("selected", window);
-    waitKey(0);
-}
-
-int get_line_score(const Mat image, const Vec4i &line)
-{
-    const double x1 = line[0];
-    const double y1 = line[1];
-    const double x2 = line[2];
-    const double y2 = line[3];
-
-    // x1, y1, x2, y2 and img given as input
-    double len = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) + 0.0001;
-    double dx = (x2 - x1) / len; // Division by zero safe
-    double dy = (y2 - y1) / len;
-
-    int sum = 0;
-    for (int i = 0; i < len; ++i)
-    {
-        int x = static_cast<int>(x1 + (dx * i + 0.5)); // 0.5 for rounding when truncating
-        int y = static_cast<int>(y1 + (dy * i + 0.5));
-        sum += image.at<uint8_t>(y, x) > 200; // White value higher than 200
-    }
-
-    return sum;
-}
-
-Vec4i get_best_line(cv::Mat image, const std::vector<Vec4i> &lines)
-{
-    int best_sum = -1;
-    Vec4i best_line;
-
-    for (const Vec4i line : lines)
-    {
-        int line_score = get_line_score(image, line);
-
-        if (line_score < best_sum)
-            continue;
-
-        best_sum = line_score;
-        best_line = line;
-    }
-
-    return best_line;
-}
-
-
-Mat draw_points(Mat source, Vec4i pointsX, int y1, int y2)
+void LaneDetection::draw_points(cv::Vec4i pointsX, int y1, int y2)
 {
     const int leftX1 = pointsX[0];
     const int leftX2 = pointsX[1];
     const int rightX1 = pointsX[2];
     const int rightX2 = pointsX[3];
 
-    Mat mask = Mat::zeros(source.size(), source.type());
+    cv::Mat mask = cv::Mat::zeros(frame_.size(), frame_.type());
 
     // Draw lines and fill poly made up of the four points described above if both bools are true
-    Mat dst; // Holds blended image
+    cv::Mat dst; // Holds blended image
 
-    line(source, Point(rightX1, y1), Point(rightX2, y2), Scalar(255, 0, 0), 7);
+    cv::line(frame_, cv::Point(rightX1, y1), cv::Point(rightX2, y2), cv::Scalar(255, 0, 0), 7);
 
-    line(source, Point(leftX1, y1), Point(leftX2, y2), Scalar(255, 0, 0), 7);
+    cv::line(frame_, cv::Point(leftX1, y1), cv::Point(leftX2, y2), cv::Scalar(255, 0, 0), 7);
 
-    Point pts[4] = {
-        Point(leftX1, y1),  // Starting point left lane
-        Point(leftX2, y2),  // Ending point left lane
-        Point(rightX2, y2), // Ending point right lane
-        Point(rightX1, y1)  // Starting point right lane
+    cv::Point pts[4] = {
+        cv::Point(leftX1, y1),  // Starting point left lane
+        cv::Point(leftX2, y2),  // Ending point left lane
+        cv::Point(rightX2, y2), // Ending point right lane
+        cv::Point(rightX1, y1)  // Starting point right lane
     };
 
-    fillConvexPoly(mask, pts, 4, Scalar(235, 229, 52)); // Color is light blue
+    cv::fillConvexPoly(mask, pts, 4, cv::Scalar(235, 229, 52)); // Color is light blue
 
     // Blend the mask and source image together
-    addWeighted(source, 1, mask, 0.3, 0.0, dst);
-
-    // Return blended image
-    return dst;
+    addWeighted(frame_, 1, mask, 0.3, 0.0, dst);
 }
 
-Mat draw_from_average(Mat source, bool drawLeftLane, bool drawRightLane, int y1, int y2)
+void LaneDetection::draw_from_average(bool drawLeftLane, bool drawRightLane, int y1, int y2)
 {
     const std::pair<int, int> left = get_average(left_average);
     const std::pair<int, int> right = get_average(right_average);
 
-    Vec4i pointsX(left.first, left.second, right.first, right.second);
+    cv::Vec4i pointsX(left.first, left.second, right.first, right.second);
 
     if (drawRightLane && drawLeftLane)
     {
@@ -176,7 +109,7 @@ Mat draw_from_average(Mat source, bool drawLeftLane, bool drawRightLane, int y1,
         if (long_missing_flag)
         {
             long_missing_flag = false;
-            return source;
+            return;
         }
     }
     else if (!drawRightLane && !drawLeftLane)
@@ -188,27 +121,26 @@ Mat draw_from_average(Mat source, bool drawLeftLane, bool drawRightLane, int y1,
     {
         long_missing_flag = true;
         clear_averages();
-        return source;
+        return;
     }
 
-    return draw_points(source, pointsX, y1, y2);
+    draw_points(pointsX, y1, y2);
 }
 
-Mat drawLanes(Mat source, std::vector<Vec4i> lines)
+void LaneDetection::drawLanes()
 {
-    const int y1 = source.rows;                                                       // Y coordinate of starting point of both the left and right lane
-    const int y2 = static_cast<int>(source.rows * (1 - cst::kTrapezoidHeight * 0.9)); // Y coordinate of ending point of both the left and right lane
+    const int y1 = frame_.rows;                                                       // Y coordinate of starting point of both the left and right lane
+    const int y2 = static_cast<int>(frame_.rows * (1 - cst::kTrapezoidHeight * 0.9)); // Y coordinate of ending point of both the left and right lane
 
     // Stop if there are no lines, just return original image without lines
-    if (lines.size() == 0)
+    if (hough_lines_.size() == 0)
     {
-        return draw_from_average(source, false, false, y1, y2);
-        // return source;
+        return draw_from_average(false, false, y1, y2);
     }
 
     // lines.resize(50);
 
-    const int imgCenter = source.cols / 2;
+    const int imgCenter = frame_.cols / 2;
 
     // Set drawing lanes to true
     bool drawRightLane = true;
@@ -216,9 +148,9 @@ Mat drawLanes(Mat source, std::vector<Vec4i> lines)
 
     // Find lines with a slope higher than the slope threshold
     std::vector<double> slopes;
-    std::vector<Vec4i> goodLines;
+    std::vector<cv::Vec4i> goodLines;
 
-    for (Vec4i line : lines)
+    for (cv::Vec4i line : hough_lines_)
     {
         const double x1 = line[0];
         const double y1 = line[1];
@@ -244,12 +176,12 @@ Mat drawLanes(Mat source, std::vector<Vec4i> lines)
 
     /* Split the good lines into two categories: right and left
     The right lines have a positive slope and the left lines have a negative slope */
-    std::vector<Vec4i> rightLines;
-    std::vector<Vec4i> leftLines;
+    std::vector<cv::Vec4i> rightLines;
+    std::vector<cv::Vec4i> leftLines;
 
     for (int i = 0; i < slopes.size(); i++)
     {
-        const Vec4i line = goodLines[i];
+        const cv::Vec4i line = goodLines[i];
 
         if (slopes[i] >= 0 /* && line[0] >= imgCenter && line[2] >= imgCenter */)
             rightLines.push_back(line);
@@ -331,6 +263,8 @@ Mat drawLanes(Mat source, std::vector<Vec4i> lines)
     int leftX1 = static_cast<int>((y1 - leftB0) / leftB1); // X coordinate of starting point of left lane
     int leftX2 = static_cast<int>((y2 - leftB0) / leftB1); // X coordinate of ending point of left lane
 
+    return draw_points(cv::Vec4i(leftX1, leftX2, rightX1, rightX2), y1, y2);
+
     if (rightX1 < 0 || rightX2 < 0)
         drawRightLane = false;
 
@@ -358,10 +292,10 @@ Mat drawLanes(Mat source, std::vector<Vec4i> lines)
     if (drawRightLane)
         add_average(right_average, rightX1, rightX2);
 
-    return draw_from_average(source, drawLeftLane, drawRightLane, y1, y2);
+    draw_from_average(drawLeftLane, drawRightLane, y1, y2);
 }
 
-std::vector<Vec4i> houghLines(Mat frame, Mat result, bool drawHough)
+void LaneDetection::houghLines(const cv::Mat &edited_frame, bool drawHough)
 {
     double rho = 3; // Distance resolution in pixels of the Hough grid
     // double theta = 1 * M_PI / 180; // Angular resolution in radians of the Hough grid
@@ -370,37 +304,60 @@ std::vector<Vec4i> houghLines(Mat frame, Mat result, bool drawHough)
     double minLineLength = 35; // Minimum number of pixels making up a line
     double maxGapLength = 100; // Maximum gap in pixels between connectable line segments
 
-    std::vector<Vec4i> linesP; // Will hold the results of the detection
-    HoughLinesP(frame, linesP, rho, theta, thresh, minLineLength, maxGapLength);
+    hough_lines_.clear();
+    cv::Mat hough_mat = edited_frame.clone();
+
+    cv::HoughLinesP(edited_frame.clone(), hough_lines_, rho, theta, thresh, minLineLength, maxGapLength);
 
     if (drawHough)
     {
-        for (size_t i = 0; i < linesP.size(); i++)
+        for (size_t i = 0; i < hough_lines_.size(); i++)
         {
-            Vec4i l = linesP[i];
-            line(result, Point(l[0], l[1]), Point(l[2], l[3]), Scalar(0, 0, 255), 3, LINE_AA);
+            cv::Vec4i l = hough_lines_[i];
+            line(hough_mat, cv::Point(l[0], l[1]), cv::Point(l[2], l[3]), cv::Scalar(0, 0, 255), 3, cv::LINE_AA);
         }
-        imshow("Hough Lines", result);
+        imshow("Hough Lines", hough_mat);
         // waitKey(0);
     }
 
-    return linesP;
+    // return linesP;
 }
 
-bool isDayTime(Mat source)
+template <typename T, typename X>
+X LaneDetection::multiplyAndSum(std::vector<T> A, std::vector<T> B)
 {
-    /* I've noticed that, in general, daytime images/videos require different color
-    filters than nighttime images/videos. For example, in darker light it is better
-    to add a gray color filter in addition to the white and yellow one */
-
-    Scalar s = mean(source); // Mean pixel values
-
-    /* I chose these cut off values by looking at the mean pixel values of multiple
-    daytime and nighttime images */
-    if (s[0] < 30 || s[1] < 33 && s[2] < 30)
+    X sum;
+    std::vector<T> temp;
+    for (int i = 0; i < A.size(); i++)
     {
-        return false;
+        temp.push_back(A[i] * B[i]);
     }
+    sum = std::accumulate(temp.begin(), temp.end(), 0.0);
 
-    return true;
+    return sum;
+}
+
+template <typename T, typename X>
+std::vector<X> LaneDetection::estimate_coefficients(std::vector<T> A, std::vector<T> B)
+{
+    // Sample size
+    size_t N = A.size();
+
+    // Calculate mean of X and Y
+    X meanA = std::accumulate(A.begin(), A.end(), 0.0) / A.size();
+    X meanB = std::accumulate(B.begin(), B.end(), 0.0) / B.size();
+
+    // Calculating cross-deviation and deviation about x
+    X SSxy = multiplyAndSum<T, T>(A, B) - (N * meanA * meanB);
+    X SSxx = multiplyAndSum<T, T>(A, A) - (N * meanA * meanA);
+
+    // Calculating regression coefficients
+    X slopeB1 = SSxy / SSxx;
+    X interceptB0 = meanB - (slopeB1 * meanA);
+
+    // Return vector, insert slope first and then intercept
+    std::vector<X> coef;
+    coef.push_back(slopeB1);
+    coef.push_back(interceptB0);
+    return coef;
 }

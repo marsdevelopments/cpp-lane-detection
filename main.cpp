@@ -1,8 +1,12 @@
 /// Use this file with videos ///
 
-#include "lane-detection.h"
+// #include "lane-detection.h"
+#include "pre_processing.hpp"
+#include "lane_detection.hpp"
 
-int main(int argc, char *argv[])
+#include "constants.h"
+
+int main()
 {
     // Load source video
     // if (argc != 2) {
@@ -12,7 +16,9 @@ int main(int argc, char *argv[])
 
     // Initialize video capture for reading a videofile
     // VideoCapture cap(argv[1]);
-    VideoCapture cap("C:\\Users\\Admin\\Desktop\\lane-detection-cpp-master\\videos\\dubai_line_test_full.mp4");
+    cv::VideoCapture cap("C:\\Users\\Admin\\dev\\projects\\cpp-lane-detection\\videos\\dubai_line_test_full.mp4");
+    // cv::VideoCapture cap("C:\\Users\\Admin\\dev\\projects\\cpp-lane-detection\\videos\\dubai_night.mp4");
+    // cv::VideoWriter output("C:\\Users\\Admin\\dev\\projects\\cpp-lane-detection\\videos\\dubai_night_output.mp4", cv::VideoWriter::fourcc('M', 'P', '4', 'V'), 30, cv::Size(cst::kVideoWidth, cst::kVideoHeight));
 
     // Check if video can be opened
     if (!cap.isOpened())
@@ -21,50 +27,62 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    PreProcessing pre_processor;
+    LaneDetection lane_detection;
+
+    const cv::Point text_position(10, 30);
+
+    int frame_counter = 0;
+
+    cv::Mat frame;
+
     // Read and analyze video
     while (true)
     {
-        Mat frame;
         cap >> frame;
 
         // Stop if frame is empty (end of video)
         if (frame.empty())
-        {
             break;
-        }
 
-        // Determine if video is taken during daytime or not
-        // bool isDay = isDayTime(frame);
-        bool isDay = true;
+        ++frame_counter;
 
-        // Filter image
-        // Mat filteredIMG = filterColors(frame, isDay);
+        // if (frame_counter < 1500)
+        //     continue;
 
-        // Apply grayscale
-        // Mat gray = applyGrayscale(filteredIMG);
-        Mat gray = applyGrayscale(frame);
+        // cv::putText(frame, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(255, 255, 255));
+        // cv::imshow("Original", frame);
 
-        // Apply Gaussian blur
-        Mat gBlur = applyGaussianBlur(gray);
+        // cv::Mat edited = pre_processor.process_threshold(frame.clone());
+        // cv::Mat edited = pre_processor.process_canny(frame.clone());
+        cv::Mat edited = pre_processor.process_custom(frame.clone());
+        cv::imshow("Processed", edited);
 
-        // Find edges
-        Mat edges = applyCanny(gBlur);
-
-        // Create mask (Region of Interest)
-        Mat maskedIMG = RegionOfInterest(edges);
+        // cv::Mat maskedIMG = RegionOfInterest(edited);
 
         // Detect straight lines and draw the lanes if possible
-        std::vector<Vec4i> linesP = houghLines(maskedIMG, frame.clone(), false);
-        Mat lanes = drawLanes(frame, linesP);
-        imshow("Lanes", lanes);
-        imshow("ROI", maskedIMG);
+        // std::vector<cv::Vec4i> linesP = houghLines(edited, frame.clone(), false);
+        // cv::Mat lanes = drawLanes(frame, linesP);
+        cv::Mat lanes = lane_detection.find_lines(frame, edited);
+
+        // cv::putText(lanes, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+        cv::putText(lanes, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(255, 255, 255));
+        cv::imshow("Lanes", lanes);
+        // cv::imshow("ROI", maskedIMG);
+        // cv::imshow("filtered", edited);
+
+        // output << lanes;
+        // std::cout << "\r" << frame_counter;
 
         // Press  ESC on keyboard to exit
-        if (waitKey(5) == 27)
+        if (cv::waitKey(1) == 27)
             break;
     }
 
+    std::cout << std::endl;
+
     cap.release();
+    // output.release();
 
     return 0;
 }
