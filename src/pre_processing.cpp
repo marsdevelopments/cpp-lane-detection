@@ -16,6 +16,19 @@ cv::Mat PreProcessing::process_threshold(const cv::Mat &source)
     return frame_;
 }
 
+cv::Mat PreProcessing::process_adaptive_threshold(const cv::Mat &source)
+{
+    frame_ = source;
+    debug_frame = frame_.clone();
+
+    apply_roi_trapezoid();
+    apply_grayscale();
+    apply_gaussian_blur();
+    apply_adaptive_thresholding();
+
+    return frame_;
+}
+
 cv::Mat PreProcessing::process_canny(const cv::Mat &source)
 {
     frame_ = source;
@@ -37,7 +50,7 @@ cv::Mat PreProcessing::process_custom(const cv::Mat &source)
     apply_gaussian_blur();
     apply_grayscale();
     apply_range();
-    apply_lane_filter();
+    // apply_lane_filter();
     // apply_thresholding();
 
     return frame_;
@@ -86,9 +99,58 @@ void PreProcessing::apply_thresholding()
     cv::threshold(frame_, frame_, 130, 255, 0);
 }
 
+void PreProcessing::apply_adaptive_thresholding()
+{
+    cv::Mat frame_copy = frame_.clone();
+    cv::threshold(frame_copy, frame_copy, current_threshold_, 255, cv::ThresholdTypes::THRESH_BINARY);
+    int new_white_ammount = cv::countNonZero(frame_copy);
+
+    int difference = new_white_ammount - last_white_ammount_;
+
+    if (last_white_ammount_ == -1)
+        difference = 0;
+
+    last_white_ammount_ = new_white_ammount;
+
+    cv::putText(debug_frame, "Difference: " + std::to_string(difference), cv::Point(10, 70), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+    cv::putText(debug_frame, "Threshold: " + std::to_string(current_threshold_), cv::Point(10, 120), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+
+    set_new_threshold(difference);
+
+    cv::threshold(frame_, frame_, current_threshold_, 255, 0);
+
+    cv::imshow("a", debug_frame);
+    cv::waitKey(0);
+}
+
+void PreProcessing::set_new_threshold(int difference)
+{
+    if (abs(difference) <= ammount_change_delta_)
+        return;
+
+    if (difference >= 0) // if difference is positive => # too much white pixels => threshold should be increased
+    {
+        current_threshold_ = (max_threshold_ + current_threshold_) / 2;
+        // current_threshold_ = max_threshold_;
+        cv::putText(debug_frame, "Incresing threshold...: ", cv::Point(10, 170), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+    }
+    else
+    {
+        current_threshold_ = (min_threshold_ + current_threshold_) / 2;
+        // current_threshold_ = min_threshold_;
+        cv::putText(debug_frame, "Decreasing threshold...: ", cv::Point(10, 170), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+    }
+
+    cv::putText(debug_frame, "New threshold: " + std::to_string(current_threshold_), cv::Point(10, 220), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+
+    cv::imshow("a", debug_frame);
+}
+
 void PreProcessing::apply_range()
 {
-    cv::inRange(frame_, 130, 200, frame_);
+    cv::Mat range_mask;
+    cv::inRange(frame_, 130, 255, range_mask);
+    bitwise_and(frame_, range_mask, frame_);
 }
 
 void PreProcessing::apply_canny()
@@ -115,8 +177,8 @@ void PreProcessing::apply_lane_filter(const int tau)
 
             const uint8_t value = frame_.at<uint8_t>(i, j);
 
-            // if (value < 130)
-            //     continue;
+            if (value < 130)
+                continue;
 
             // if (is_near_range(i, j, 3))
             //     result.at<uint8_t>(i, j) = 255;
@@ -126,8 +188,13 @@ void PreProcessing::apply_lane_filter(const int tau)
 
             // const uint8_t result_value =
 
-            result.at<uint8_t>(i, j) =
+            const int resulted_value =
                 2 * value - (x_tau + tau_x) - abs(x_tau - tau_x);
+
+            // if (resulted_value > 255)
+            //     std::cout << "resulted_value is: " << resulted_value << std::endl;
+
+            result.at<uint8_t>(i, j) = resulted_value > 255 ? 255 : resulted_value;
         }
     }
 
@@ -135,22 +202,4 @@ void PreProcessing::apply_lane_filter(const int tau)
     // cv::waitKey(0);
 
     frame_ = result;
-}
-
-bool PreProcessing::is_near_range(const int row_index, const int col_index, const uint8_t color_margin)
-{
-    const uint8_t pixel_value = frame_.at<uint8_t>(row_index, col_index);
-
-    const uint8_t upper_threshold = pixel_value + color_margin;
-    const uint8_t lower_threshold = pixel_value - color_margin;
-
-    for (int j = col_index - color_margin, end = col_index + color_margin; j < end; ++j)
-    {
-        const uint8_t current_value = frame_.at<uint8_t>(row_index, j);
-
-        if (current_value > upper_threshold || current_value < lower_threshold)
-            return false;
-    }
-
-    return true;
 }

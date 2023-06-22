@@ -47,27 +47,28 @@ int main()
 
         ++frame_counter;
 
-        // if (frame_counter < 1500)
-        //     continue;
+        if (frame_counter < 2500)
+            continue;
 
-        // cv::putText(frame, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(255, 255, 255));
-        // cv::imshow("Original", frame);
+        cv::imshow("Original", frame);
+        cv::putText(frame, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
 
         // cv::Mat edited = pre_processor.process_threshold(frame.clone());
         // cv::Mat edited = pre_processor.process_canny(frame.clone());
-        cv::Mat edited = pre_processor.process_custom(frame.clone());
+        // cv::Mat edited = pre_processor.process_custom(frame.clone());
+        cv::Mat edited = pre_processor.process_adaptive_threshold(frame.clone());
         cv::imshow("Processed", edited);
 
         // cv::Mat maskedIMG = RegionOfInterest(edited);
 
         // Detect straight lines and draw the lanes if possible
-        // std::vector<cv::Vec4i> linesP = houghLines(edited, frame.clone(), false);
+        // std::vector<cv::Vec4i> linesP = hough_lines(edited, frame.clone(), false);
         // cv::Mat lanes = drawLanes(frame, linesP);
-        cv::Mat lanes = lane_detection.find_lines(frame, edited);
+        // cv::Mat lanes = lane_detection.find_lines(frame, edited);
 
         // cv::putText(lanes, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
-        cv::putText(lanes, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(255, 255, 255));
-        cv::imshow("Lanes", lanes);
+        // cv::putText(lanes, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(255, 255, 255));
+        // cv::imshow("Lanes", lanes);
         // cv::imshow("ROI", maskedIMG);
         // cv::imshow("filtered", edited);
 
