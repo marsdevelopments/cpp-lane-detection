@@ -1,13 +1,17 @@
 #pragma once
 
+#include <array>
+
+#include <opencv2/opencv.hpp>
+
 namespace cst
 {
     constexpr int kVideoWidth = 1280;
     constexpr int kVideoHeight = 720;
 
-    constexpr int kTrapezoidOffsetX = 0;
-    // constexpr int kTrapezoidOffsetX = -10;
-    constexpr int kTrapezoidOffsetY = static_cast<int>(kVideoHeight * 0.4);
+    // constexpr int kTrapezoidOffsetX = 0;
+    constexpr int kTrapezoidOffsetX = -10;
+    // constexpr int kTrapezoidOffsetY = static_cast<int>(kVideoHeight * 0.4);
 
     // Parameters big trapezoid
     // constexpr double kTrapezoidBottomWidth = 0.52; // Width of bottom edge of trapezoid, expressed as percentage of image width
@@ -28,7 +32,7 @@ namespace cst
     constexpr double kSmallTopWidth = 0.0;    // We multiply the percentage trapoezoidTopWidth with this parameter to create a less wide top edge
     constexpr double kSmallHeight = 0.0;      // Height of the small trapezoid expressed as percentage of height of big trapezoid
 
-    const std::array<cv::Point, 8> trapezoid_points = {
+    const std::array<cv::Point, 8> trapezoid_roi_points = {
         // outer trapezoid
         // bottom left
         cv::Point(
@@ -64,9 +68,6 @@ namespace cst
         cv::Point(
             static_cast<int>(kVideoWidth - (kVideoWidth * (1.0 - kTrapezoidBottomWidth * kSmallBottomWidth)) / 2.0) + kTrapezoidOffsetX,
             kVideoHeight)};
-
-    constexpr double kRectangleWidth = 1.0;
-    constexpr double kRectangleHeight = 0.9;
 
     constexpr int kMinLaneWidth = 50;
     constexpr double kSlopeThreshold = 0.5;

@@ -346,10 +346,10 @@ void LaneDetection::build_random_lines()
     cv::imshow("Built Lines", edited_frame_);
 
     // trapezoid points
-    const cv::Point bottom_left = cst::trapezoid_points.at(0);
-    const cv::Point top_left = cst::trapezoid_points.at(1);
-    const cv::Point top_right = cst::trapezoid_points.at(2);
-    const cv::Point bottom_right = cst::trapezoid_points.at(3);
+    const cv::Point bottom_left = cst::trapezoid_roi_points.at(0);
+    const cv::Point top_left = cst::trapezoid_roi_points.at(1);
+    const cv::Point top_right = cst::trapezoid_roi_points.at(2);
+    const cv::Point bottom_right = cst::trapezoid_roi_points.at(3);
     const int y_top = top_left.y;
     const int y_bottom = bottom_left.y;
 

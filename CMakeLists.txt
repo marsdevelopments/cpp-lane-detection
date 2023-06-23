@@ -9,8 +9,11 @@ include_directories((src/include))
 
 add_executable(cpp-lane-detection
   main.cpp
-  src/lane_detection.cpp
   src/pre_processing.cpp
+  src/lane_detection.cpp
+  src/random_lane_detection.cpp
+  src/random_lane_tracking.cpp
+  src/tracker_manager.cpp
 )
 
 target_link_libraries( cpp-lane-detection ${OpenCV_LIBS} )
