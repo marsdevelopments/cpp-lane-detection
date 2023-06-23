@@ -353,8 +353,8 @@ void LaneDetection::build_random_lines()
     const int y_top = top_left.y;
     const int y_bottom = bottom_left.y;
 
-    const std::vector<std::pair<int, int>> left_lines = get_lines_in_range(top_left.x, x_center, bottom_left.x, x_center);
-    const std::vector<std::pair<int, int>> right_lines = get_lines_in_range(x_center, top_right.x, x_center, bottom_right.x);
+    const std::array<std::pair<int, int>, cst::lines_array_size> left_lines = get_lines_in_range(top_left.x, x_center, bottom_left.x, x_center);
+    const std::array<std::pair<int, int>, cst::lines_array_size> right_lines = get_lines_in_range(x_center, top_right.x, x_center, bottom_right.x);
 
 #ifdef DEBUG_LINES
 
@@ -388,7 +388,7 @@ void LaneDetection::build_random_lines()
     draw_points(cv::Vec4i{left_line.first, left_line.second, right_line.first, right_line.second}, y_top, y_bottom);
 }
 
-std::vector<std::pair<int, int>> LaneDetection::get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max)
+std::array<std::pair<int, int>, cst::lines_array_size> LaneDetection::get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max)
 {
     constexpr int nr_of_lines = 200;
 
@@ -397,8 +397,7 @@ std::vector<std::pair<int, int>> LaneDetection::get_lines_in_range(const int top
     std::uniform_int_distribution<int> top_distribution(top_min, top_max);
     std::uniform_int_distribution<int> bottom_distribution(bottom_min, bottom_max);
 
-    std::vector<std::pair<int, int>> output;
-    output.reserve(nr_of_lines);
+    std::array<std::pair<int, int>, cst::lines_array_size> output;
 
     for (int i = 0; i < nr_of_lines; ++i)
     {
@@ -406,13 +405,13 @@ std::vector<std::pair<int, int>> LaneDetection::get_lines_in_range(const int top
         line.first = top_distribution(generator);
         line.second = bottom_distribution(generator);
 
-        output.push_back(line);
+        output.at(i) = line;
     }
 
     return output;
 }
 
-std::pair<int, int> LaneDetection::select_best_line(const std::vector<std::pair<int, int>> &lines, const int y_top, const int y_bottom)
+std::pair<int, int> LaneDetection::select_best_line(const std::array<std::pair<int, int>, cst::lines_array_size> &lines, const int y_top, const int y_bottom)
 {
     int best_line_score = -1;
     size_t best_line_index = SIZE_MAX;

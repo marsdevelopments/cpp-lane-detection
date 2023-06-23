@@ -4,6 +4,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "constants.hpp"
+
 class LaneDetection
 {
 public:
@@ -53,9 +55,9 @@ private:
 
     void build_random_lines();
 
-    std::vector<std::pair<int, int>> get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max);
+    std::array<std::pair<int, int>, cst::lines_array_size> get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max);
 
-    std::pair<int, int> select_best_line(const std::vector<std::pair<int, int>> &lines, const int y_top, const int y_bottom);
+    std::pair<int, int> select_best_line(const std::array<std::pair<int, int>, cst::lines_array_size> &lines, const int y_top, const int y_bottom);
 
     int get_line_score(const int x1, const int y1, const int x2, const int y2);
 
