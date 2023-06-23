@@ -2,19 +2,32 @@
 
 #include <vector>
 #include <numeric>
+#include <random>
 
 #include "constants.hpp"
+
+#define DEBUG_LINES 1
 
 LaneDetection::LaneDetection()
 {
 }
 
-cv::Mat LaneDetection::find_lines(const cv::Mat &original_frame, const cv::Mat &edited_frame)
+cv::Mat LaneDetection::find_lines_hough(const cv::Mat &original_frame, const cv::Mat &edited_frame)
 {
     original_frame_ = original_frame;
 
     build_hough_lines(edited_frame, true);
     draw_lanes();
+
+    return original_frame_;
+}
+
+cv::Mat LaneDetection::find_lines_custom(const cv::Mat &original_frame, const cv::Mat &edited_frame)
+{
+    original_frame_ = original_frame;
+    edited_frame_ = edited_frame;
+
+    build_random_lines();
 
     return original_frame_;
 }
@@ -303,7 +316,7 @@ void LaneDetection::build_hough_lines(const cv::Mat &edited_frame, bool drawHoug
     // double theta = 1 * M_PI / 180; // Angular resolution in radians of the Hough grid
     double theta = 3.14 / 180; // Angular resolution in radians of the Hough grid
     int thresh = 30;           // Minimum number of votes (intersections in Hough grid cell)
-    double minLineLength = 80; // Minimum number of pixels making up a line
+    double minLineLength = 25; // Minimum number of pixels making up a line
     double maxGapLength = 110; // Maximum gap in pixels between connectable line segments
 
     hough_lines_.clear();
@@ -324,6 +337,121 @@ void LaneDetection::build_hough_lines(const cv::Mat &edited_frame, bool drawHoug
     }
 
     // return linesP;
+}
+
+void LaneDetection::build_random_lines()
+{
+    const int x_center = cst::kVideoWidth / 2;
+
+    cv::imshow("Built Lines", edited_frame_);
+
+    // trapezoid points
+    const cv::Point bottom_left = cst::trapezoid_points.at(0);
+    const cv::Point top_left = cst::trapezoid_points.at(1);
+    const cv::Point top_right = cst::trapezoid_points.at(2);
+    const cv::Point bottom_right = cst::trapezoid_points.at(3);
+    const int y_top = top_left.y;
+    const int y_bottom = bottom_left.y;
+
+    const std::vector<std::pair<int, int>> left_lines = get_lines_in_range(top_left.x, x_center, bottom_left.x, x_center);
+    const std::vector<std::pair<int, int>> right_lines = get_lines_in_range(x_center, top_right.x, x_center, bottom_right.x);
+
+#ifdef DEBUG_LINES
+
+    cv::Mat lanes_frame = original_frame_.clone();
+
+    for (const std::pair<int, int> line : left_lines)
+    {
+        cv::line(lanes_frame, cv::Point(line.first, y_top), cv::Point(line.second, y_bottom), cv::Scalar(0, 0, 255), 2 /* , cv::LINE_AA */);
+    }
+    for (const std::pair<int, int> line : right_lines)
+    {
+        cv::line(lanes_frame, cv::Point(line.first, y_top), cv::Point(line.second, y_bottom), cv::Scalar(0, 0, 255), 2 /* , cv::LINE_AA */);
+    }
+    cv::imshow("Built Lines", lanes_frame);
+
+#endif
+
+    const std::pair<int, int> left_line = select_best_line(left_lines, y_top, y_bottom);
+    const std::pair<int, int> right_line = select_best_line(right_lines, y_top, y_bottom);
+
+#ifdef DEBUG_LINES
+
+    cv::line(lanes_frame, cv::Point(left_line.first, y_top), cv::Point(left_line.second, y_bottom), cv::Scalar(255, 0, 0), 2 /* , cv::LINE_AA */);
+
+    cv::line(lanes_frame, cv::Point(right_line.first, y_top), cv::Point(right_line.second, y_bottom), cv::Scalar(255, 0, 0), 2 /* , cv::LINE_AA */);
+
+    cv::imshow("Built Lines", lanes_frame);
+
+#endif
+
+    draw_points(cv::Vec4i{left_line.first, left_line.second, right_line.first, right_line.second}, y_top, y_bottom);
+}
+
+std::vector<std::pair<int, int>> LaneDetection::get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max)
+{
+    constexpr int nr_of_lines = 200;
+
+    std::random_device r;
+    std::default_random_engine generator{r()};
+    std::uniform_int_distribution<int> top_distribution(top_min, top_max);
+    std::uniform_int_distribution<int> bottom_distribution(bottom_min, bottom_max);
+
+    std::vector<std::pair<int, int>> output;
+    output.reserve(nr_of_lines);
+
+    for (int i = 0; i < nr_of_lines; ++i)
+    {
+        std::pair<int, int> line;
+        line.first = top_distribution(generator);
+        line.second = bottom_distribution(generator);
+
+        output.push_back(line);
+    }
+
+    return output;
+}
+
+std::pair<int, int> LaneDetection::select_best_line(const std::vector<std::pair<int, int>> &lines, const int y_top, const int y_bottom)
+{
+    int best_line_score = -1;
+    size_t best_line_index = SIZE_MAX;
+
+    for (size_t i = 0, end = lines.size(); i < end; ++i)
+    {
+        const std::pair<int, int> line = lines.at(i);
+
+        const int line_score = get_line_score(line.first, y_top, line.second, y_bottom);
+
+        if (line_score < best_line_score)
+            continue;
+
+        best_line_score = line_score;
+        best_line_index = i;
+    }
+
+    if (best_line_index == SIZE_MAX)
+        return std::pair<int, int>(0, 0);
+
+    return lines.at(best_line_index);
+}
+
+int LaneDetection::get_line_score(const int x1, const int y1, const int x2, const int y2)
+{
+    const double length = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) + 0.0001;
+    double dx = (x2 - x1) / length; // Division by zero safe
+    double dy = (y2 - y1) / length;
+
+    int score = 0;
+
+    for (int i = 0; i < length; ++i)
+    {
+        int x = static_cast<int>(x1 + (dx * i + 0.5)); // 0.5 for rounding when truncating
+        int y = static_cast<int>(y1 + (dy * i + 0.5));
+        score += edited_frame_.at<uint8_t>(y, x); // White value higher than 200
+    }
+
+    return score;
 }
 
 template <typename T, typename X>

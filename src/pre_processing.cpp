@@ -59,7 +59,7 @@ cv::Mat PreProcessing::process_custom(const cv::Mat &source)
 void PreProcessing::apply_roi_trapezoid()
 {
     cv::Mat mask = cv::Mat::zeros(frame_.size(), frame_.type());
-    fillPoly(mask, points, cv::Scalar(255, 255, 255));
+    fillPoly(mask, cst::trapezoid_points, cv::Scalar(255, 255, 255));
 
     bitwise_and(frame_, mask, frame_);
 }
@@ -103,47 +103,59 @@ void PreProcessing::apply_adaptive_thresholding()
 {
     cv::Mat frame_copy = frame_.clone();
     cv::threshold(frame_copy, frame_copy, current_threshold_, 255, cv::ThresholdTypes::THRESH_BINARY);
-    int new_white_ammount = cv::countNonZero(frame_copy);
+    const int white_ammount = cv::countNonZero(frame_copy);
 
-    int difference = new_white_ammount - last_white_ammount_;
-
-    if (last_white_ammount_ == -1)
-        difference = 0;
-
-    last_white_ammount_ = new_white_ammount;
-
-    cv::putText(debug_frame, "Difference: " + std::to_string(difference), cv::Point(10, 70), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
-    cv::putText(debug_frame, "Threshold: " + std::to_string(current_threshold_), cv::Point(10, 120), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
-
-    set_new_threshold(difference);
+    set_threshold(white_ammount);
 
     cv::threshold(frame_, frame_, current_threshold_, 255, 0);
 
+#if DEBUG_PROC
+    cv::putText(debug_frame, "White ammount: " + std::to_string(white_ammount), cv::Point(10, 70), cv::FONT_HERSHEY_PLAIN, 1.5, debug_color);
+    cv::putText(debug_frame, "Threshold: " + std::to_string(current_threshold_), cv::Point(10, 120), cv::FONT_HERSHEY_PLAIN, 1.5, debug_color);
     cv::imshow("a", debug_frame);
     cv::waitKey(0);
+#endif
 }
 
-void PreProcessing::set_new_threshold(int difference)
+void PreProcessing::set_threshold(const int &white_ammount)
 {
-    if (abs(difference) <= ammount_change_delta_)
+    if (is_white_ammount_acceptable(white_ammount))
         return;
 
-    if (difference >= 0) // if difference is positive => # too much white pixels => threshold should be increased
+    const int average_threshold = (min_threshold_ + max_threshold_) / 2;
+
+#if DEBUG_PROC
+    std::string text;
+#endif
+
+    if (white_ammount > max_white) // if there are too much white pixels => threshold should be increased
     {
         current_threshold_ = (max_threshold_ + current_threshold_) / 2;
-        // current_threshold_ = max_threshold_;
-        cv::putText(debug_frame, "Incresing threshold...: ", cv::Point(10, 170), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+
+#if DEBUG_PROC
+        text = "Incresing threshold...: ";
+#endif
     }
-    else
+    else // if it is not too much, it is too little => threshold should be descreased
     {
         current_threshold_ = (min_threshold_ + current_threshold_) / 2;
-        // current_threshold_ = min_threshold_;
-        cv::putText(debug_frame, "Decreasing threshold...: ", cv::Point(10, 170), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+
+#if DEBUG_PROC
+        text = "Decreasing threshold...: ";
+#endif
     }
 
-    cv::putText(debug_frame, "New threshold: " + std::to_string(current_threshold_), cv::Point(10, 220), cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(0, 0, 0));
+#if DEBUG_PROC
+    cv::putText(debug_frame, text, cv::Point(10, 170), cv::FONT_HERSHEY_PLAIN, 1.5, debug_color);
+    cv::putText(debug_frame, "New threshold: " + std::to_string(current_threshold_), cv::Point(10, 220), cv::FONT_HERSHEY_PLAIN, 1.5, debug_color);
 
-    cv::imshow("a", debug_frame);
+    // cv::imshow("a", debug_frame);
+#endif
+}
+
+bool PreProcessing::is_white_ammount_acceptable(const int &ammount)
+{
+    return (ammount >= min_white && ammount <= max_white);
 }
 
 void PreProcessing::apply_range()

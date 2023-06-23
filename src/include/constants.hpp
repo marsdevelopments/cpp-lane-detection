@@ -25,8 +25,45 @@ namespace cst
     // constexpr double kSmallTopWidth = 0.25;   // We multiply the percentage trapoezoidTopWidth with this parameter to create a less wide top edge
     // constexpr double kSmallHeight = 1.0;      // Height of the small trapezoid expressed as percentage of height of big trapezoid
     constexpr double kSmallBottomWidth = 0.0; // This will be added to trapezoidBottomWidth to create a less wide bottom edge
-    constexpr double kSmallTopWidth = 0.0;   // We multiply the percentage trapoezoidTopWidth with this parameter to create a less wide top edge
+    constexpr double kSmallTopWidth = 0.0;    // We multiply the percentage trapoezoidTopWidth with this parameter to create a less wide top edge
     constexpr double kSmallHeight = 0.0;      // Height of the small trapezoid expressed as percentage of height of big trapezoid
+
+    const std::array<cv::Point, 8> trapezoid_points = {
+        // outer trapezoid
+        // bottom left
+        cv::Point(
+            static_cast<int>((kVideoWidth * (1.0 - kTrapezoidBottomWidth)) / 2.0) + kTrapezoidOffsetX,
+            kVideoHeight),
+        // top left
+        cv::Point(
+            static_cast<int>((kVideoWidth * (1.0 - kTrapezoidTopWidth)) / 2.0) + kTrapezoidOffsetX,
+            kVideoHeight - static_cast<int>(kVideoHeight * kTrapezoidHeight)),
+        // top right
+        cv::Point(
+            static_cast<int>(kVideoWidth - (kVideoWidth * (1.0 - kTrapezoidTopWidth)) / 2.0) + kTrapezoidOffsetX,
+            kVideoHeight - static_cast<int>(kVideoHeight * kTrapezoidHeight)),
+        // bottom right
+        cv::Point(
+            static_cast<int>(kVideoWidth - (kVideoWidth * (1.0 - kTrapezoidBottomWidth)) / 2.0) + kTrapezoidOffsetX,
+            kVideoHeight),
+
+        // inner trapezoid
+        // bottom left
+        cv::Point(
+            static_cast<int>((kVideoWidth * (1.0 - kTrapezoidBottomWidth * kSmallBottomWidth)) / 2.0) + kTrapezoidOffsetX,
+            kVideoHeight),
+        // top left
+        cv::Point(
+            static_cast<int>((kVideoWidth * (1.0 - kTrapezoidTopWidth * kSmallTopWidth)) / 2.0) + kTrapezoidOffsetX,
+            kVideoHeight - static_cast<int>(kVideoHeight * kTrapezoidHeight * kSmallHeight)),
+        // top right
+        cv::Point(
+            static_cast<int>(kVideoWidth - (kVideoWidth * (1.0 - kTrapezoidTopWidth * kSmallTopWidth)) / 2.0) + kTrapezoidOffsetX,
+            kVideoHeight - static_cast<int>(kVideoHeight * kTrapezoidHeight * kSmallHeight)),
+        // bottom right
+        cv::Point(
+            static_cast<int>(kVideoWidth - (kVideoWidth * (1.0 - kTrapezoidBottomWidth * kSmallBottomWidth)) / 2.0) + kTrapezoidOffsetX,
+            kVideoHeight)};
 
     constexpr double kRectangleWidth = 1.0;
     constexpr double kRectangleHeight = 0.9;
@@ -39,4 +76,6 @@ namespace cst
     constexpr int kCannyHighThreshold = kCannyLowThreshold * kCannyRatio;
 
     constexpr int kLaneLineWidth = 25;
+
+    constexpr size_t lines_array_size = 300;
 }

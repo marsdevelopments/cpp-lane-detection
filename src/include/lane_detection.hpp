@@ -9,7 +9,9 @@ class LaneDetection
 public:
     LaneDetection();
 
-    cv::Mat find_lines(const cv::Mat &original_frame, const cv::Mat& edited_frame);
+    cv::Mat find_lines_hough(const cv::Mat &original_frame, const cv::Mat &edited_frame);
+
+    cv::Mat find_lines_custom(const cv::Mat &original_frame, const cv::Mat &edited_frame);
 
 private:
     static const size_t average_size = 5;
@@ -31,6 +33,7 @@ private:
 
     std::vector<cv::Vec4i> hough_lines_;
 
+    cv::Mat edited_frame_;
     cv::Mat original_frame_;
 
 private:
@@ -46,7 +49,15 @@ private:
 
     void draw_lanes();
 
-    void build_hough_lines(const cv::Mat& edited_frame, bool drawHough = false);
+    void build_hough_lines(const cv::Mat &edited_frame, bool drawHough = false);
+
+    void build_random_lines();
+
+    std::vector<std::pair<int, int>> get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max);
+
+    std::pair<int, int> select_best_line(const std::vector<std::pair<int, int>> &lines, const int y_top, const int y_bottom);
+
+    int get_line_score(const int x1, const int y1, const int x2, const int y2);
 
     /**
      * @brief Multiplies two vectors and then calculates the sum of the multiplied values.

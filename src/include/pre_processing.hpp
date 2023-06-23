@@ -4,6 +4,8 @@
 
 #include "constants.hpp"
 
+#define DEBUG_PROC 1
+
 class PreProcessing
 {
 public:
@@ -75,7 +77,12 @@ private:
     /**
      * @brief Apply the thresholding filter the frame class property.
      */
-    void set_new_threshold(int difference);
+    bool is_white_ammount_acceptable(const int &ammount);
+
+    /**
+     * @brief Apply the thresholding filter the frame class property.
+     */
+    void set_threshold(const int &white_ammount);
 
     /**
      * @brief Apply the intensity range filter the frame class property.
@@ -95,42 +102,19 @@ private:
 private:
     cv::Mat frame_;
 
-    const std::array<cv::Point, 8> points = {
-        // outer trapezoid
-        cv::Point(
-            static_cast<int>((cst::kVideoWidth * (1.0 - cst::kTrapezoidBottomWidth)) / 2.0) + cst::kTrapezoidOffsetX,
-            cst::kVideoHeight),
-        cv::Point(
-            static_cast<int>((cst::kVideoWidth * (1.0 - cst::kTrapezoidTopWidth)) / 2.0) + cst::kTrapezoidOffsetX,
-            cst::kVideoHeight - static_cast<int>(cst::kVideoHeight * cst::kTrapezoidHeight)),
-        cv::Point(
-            static_cast<int>(cst::kVideoWidth - (cst::kVideoWidth * (1.0 - cst::kTrapezoidTopWidth)) / 2.0) + cst::kTrapezoidOffsetX,
-            cst::kVideoHeight - static_cast<int>(cst::kVideoHeight * cst::kTrapezoidHeight)),
-        cv::Point(
-            static_cast<int>(cst::kVideoWidth - (cst::kVideoWidth * (1.0 - cst::kTrapezoidBottomWidth)) / 2.0) + cst::kTrapezoidOffsetX,
-            cst::kVideoHeight),
+    // const int ammount_change_delta_ = 2000;
 
-        // inner trapezoid
-        cv::Point(
-            static_cast<int>((cst::kVideoWidth * (1.0 - cst::kTrapezoidBottomWidth * cst::kSmallBottomWidth)) / 2.0) + cst::kTrapezoidOffsetX,
-            cst::kVideoHeight),
-        cv::Point(
-            static_cast<int>((cst::kVideoWidth * (1.0 - cst::kTrapezoidTopWidth * cst::kSmallTopWidth)) / 2.0) + cst::kTrapezoidOffsetX,
-            cst::kVideoHeight - static_cast<int>(cst::kVideoHeight * cst::kTrapezoidHeight * cst::kSmallHeight)),
-        cv::Point(
-            static_cast<int>(cst::kVideoWidth - (cst::kVideoWidth * (1.0 - cst::kTrapezoidTopWidth * cst::kSmallTopWidth)) / 2.0) + cst::kTrapezoidOffsetX,
-            cst::kVideoHeight - static_cast<int>(cst::kVideoHeight * cst::kTrapezoidHeight * cst::kSmallHeight)),
-        cv::Point(
-            static_cast<int>(cst::kVideoWidth - (cst::kVideoWidth * (1.0 - cst::kTrapezoidBottomWidth * cst::kSmallBottomWidth)) / 2.0) + cst::kTrapezoidOffsetX,
-            cst::kVideoHeight)};
+    const int min_white = 650;
+    const int max_white = 3500;
 
-    const int ammount_change_delta_ = 10000;
+    // int last_white_ammount_ = -1;
 
-    int last_white_ammount_ = -1;
+    const uint8_t min_threshold_ = 60;
+    const uint8_t max_threshold_ = 160;
+    uint8_t current_threshold_ = 140;
 
-    const uint8_t min_threshold_ = 80;
-    const uint8_t max_threshold_ = 140;
-    uint8_t current_threshold_ = 130;
-    
+#if DEBUG_PROC
     cv::Mat debug_frame;
+    const cv::Scalar debug_color{255, 255, 255}; // white
+#endif
 };
