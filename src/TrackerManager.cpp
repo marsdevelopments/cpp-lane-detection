@@ -1,8 +1,8 @@
-#include "tracker_manager.hpp"
+#include "TrackerManager.hpp"
 
-#include "pre_processing.hpp"
-#include "random_lane_detection.hpp"
-#include "random_lane_tracking.hpp"
+#include "PreProcessing.hpp"
+#include "RandomLaneDetection.hpp"
+#include "RandomLaneTracking.hpp"
 
 TrackerManager::TrackerManager(const std::string video_path)
     : video_path_(video_path)
@@ -49,12 +49,14 @@ void TrackerManager::start_tracking()
         cv::imshow("Processed", edited);
 
         // Detect straight lines and draw the lanes if possible
-        cv::Vec4i detected_lines = lane_detection.find_lines(frame, edited);
+        LanePoints detected_lines = lane_detection.find_lines(frame, edited);
 
-        lane_tracking.track_lines()
+        std::pair<cv::Mat, bool> result = lane_tracking.track_lines(frame, edited, detected_lines);
 
-        // cv::putText(lanes, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(255, 255, 255));
-        // cv::imshow("Lanes", lanes);
+        // lane_tracking.track_lines()
+
+        cv::putText(result.first, "Frame: " + std::to_string(frame_counter), text_position, cv::FONT_HERSHEY_PLAIN, 1.5, cv::Scalar(255, 255, 255));
+        cv::imshow("Lanes", result.first);
         // cv::imshow("ROI", maskedIMG);
         // cv::imshow("filtered", edited);
 

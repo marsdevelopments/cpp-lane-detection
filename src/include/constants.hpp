@@ -32,16 +32,19 @@ namespace cst
     constexpr double kSmallTopWidth = 0.0;    // We multiply the percentage trapoezoidTopWidth with this parameter to create a less wide top edge
     constexpr double kSmallHeight = 0.0;      // Height of the small trapezoid expressed as percentage of height of big trapezoid
 
+    constexpr int y_top = kVideoHeight - static_cast<int>(kVideoHeight * kTrapezoidHeight);
+    constexpr int y_bottom = kVideoHeight;
+
     const std::array<cv::Point, 8> trapezoid_roi_points = {
         // outer trapezoid
         // bottom left
         cv::Point(
             static_cast<int>((kVideoWidth * (1.0 - kTrapezoidBottomWidth)) / 2.0) + kTrapezoidOffsetX,
-            kVideoHeight),
+            y_bottom),
         // top left
         cv::Point(
             static_cast<int>((kVideoWidth * (1.0 - kTrapezoidTopWidth)) / 2.0) + kTrapezoidOffsetX,
-            kVideoHeight - static_cast<int>(kVideoHeight * kTrapezoidHeight)),
+            y_top),
         // top right
         cv::Point(
             static_cast<int>(kVideoWidth - (kVideoWidth * (1.0 - kTrapezoidTopWidth)) / 2.0) + kTrapezoidOffsetX,

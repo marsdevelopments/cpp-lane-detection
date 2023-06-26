@@ -5,17 +5,20 @@
 #include <opencv2/opencv.hpp>
 
 #include "constants.hpp"
+#include "LanePoints.hpp"
 
 class RandomLaneTracking
 {
 public:
-    cv::Vec4i track_lines(const cv::Mat &original_frame, const cv::Mat &edited_frame, const cv::Vec4i &line_points_x);
+    std::pair<cv::Mat, bool> track_lines(const cv::Mat &original_frame, const cv::Mat &edited_frame, const LanePoints &lane_points);
 
 private:
+    static const size_t average_size = 5;
+    const int y_top_ = cst::trapezoid_roi_points.at(1).y;
+    const int y_bottom_ = cst::trapezoid_roi_points.at(0).y;
+
     cv::Mat edited_frame_;
     cv::Mat original_frame_;
-
-    static const size_t average_size = 5;
 
     bool long_missing_flag = false;
     size_t missing_frames_counter = 0;
@@ -47,7 +50,7 @@ private:
 
     std::pair<int, int> get_right_average();
 
-    void draw_from_average(bool drawLeftLane, bool drawRightLane, int y1, int y2);
+    void draw_from_average(bool drawLeftLane, bool drawRightLane);
 
-    void draw_points(std::pair<int, int> left, std::pair<int, int> right, int y1, int y2);
+    void draw_points(const std::pair<int, int> &left, const std::pair<int, int> &right);
 };

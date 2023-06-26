@@ -1,4 +1,4 @@
-#include "include/pre_processing.hpp"
+#include "PreProcessing.hpp"
 
 #include "constants.hpp"
 
@@ -19,7 +19,10 @@ cv::Mat PreProcessing::process_threshold(const cv::Mat &source)
 cv::Mat PreProcessing::process_adaptive_threshold(const cv::Mat &source)
 {
     frame_ = source;
+
+#if DEBUG_PROC
     debug_frame = frame_.clone();
+#endif
 
     apply_roi_trapezoid();
     apply_grayscale();

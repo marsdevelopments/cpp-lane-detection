@@ -4,7 +4,7 @@
 
 #include "constants.hpp"
 
-#define DEBUG_PROC 1
+#define DEBUG_PROC 0
 
 class PreProcessing
 {

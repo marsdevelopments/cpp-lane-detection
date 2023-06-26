@@ -1,18 +1,17 @@
-#include "random_lane_detection.hpp"
-
-#include "lane_detection.hpp"
+#include "RandomLaneDetection.hpp"
 
 #include <vector>
 #include <numeric>
 #include <random>
 
 #include "constants.hpp"
+#include "RandomLineBuilder.hpp"
 
 #define DEBUG_LINE_DET 1
 
 RandomLaneDetection::RandomLaneDetection() {}
 
-cv::Vec4i RandomLaneDetection::find_lines(const cv::Mat &original_frame, const cv::Mat &edited_frame)
+LanePoints RandomLaneDetection::find_lines(const cv::Mat &original_frame, const cv::Mat &edited_frame)
 {
     original_frame_ = original_frame;
     edited_frame_ = edited_frame;
@@ -22,7 +21,7 @@ cv::Vec4i RandomLaneDetection::find_lines(const cv::Mat &original_frame, const c
     const std::pair<int, int> left_line = select_best_line(left_lines_);
     const std::pair<int, int> right_line = select_best_line(right_lines_);
 
-    return cv::Vec4i{left_line.first, left_line.second, right_line.first, right_line.second};
+    return LanePoints{left_line.first, left_line.second, right_line.first, right_line.second};
 }
 
 void RandomLaneDetection::populate_lines()
@@ -31,8 +30,8 @@ void RandomLaneDetection::populate_lines()
 
     cv::imshow("Built Lines", edited_frame_);
 
-    left_lines_ = get_lines_in_range(top_left_x_, x_center, bottom_left_x_, x_center);
-    right_lines_ = get_lines_in_range(x_center, top_right_x_, x_center, bottom_right_x_);
+    left_lines_ = RandomLineBuilder::build_lines<cst::lines_array_size>(top_left_x_, x_center, bottom_left_x_, x_center);
+    right_lines_ = RandomLineBuilder::build_lines<cst::lines_array_size>(x_center, top_right_x_, x_center, bottom_right_x_);
 
 #if DEBUG_LINE_DET
 
@@ -49,29 +48,6 @@ void RandomLaneDetection::populate_lines()
     cv::imshow("Built Lines", lanes_frame);
 
 #endif
-}
-
-std::array<std::pair<int, int>, cst::lines_array_size> RandomLaneDetection::get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max)
-{
-    constexpr int nr_of_lines = 200;
-
-    std::random_device r;
-    std::default_random_engine generator{r()};
-    std::uniform_int_distribution<int> top_distribution(top_min, top_max);
-    std::uniform_int_distribution<int> bottom_distribution(bottom_min, bottom_max);
-
-    std::array<std::pair<int, int>, cst::lines_array_size> output;
-
-    for (int i = 0; i < nr_of_lines; ++i)
-    {
-        std::pair<int, int> line;
-        line.first = top_distribution(generator);
-        line.second = bottom_distribution(generator);
-
-        output.at(i) = line;
-    }
-
-    return output;
 }
 
 std::pair<int, int> RandomLaneDetection::select_best_line(const std::array<std::pair<int, int>, cst::lines_array_size> &lines)
@@ -93,7 +69,7 @@ std::pair<int, int> RandomLaneDetection::select_best_line(const std::array<std::
     }
 
     if (best_line_index == SIZE_MAX)
-        return std::pair<int, int>(0, 0);
+        return std::pair<int, int>(-1, -1);
 
     return lines.at(best_line_index);
 }
@@ -106,10 +82,11 @@ int RandomLaneDetection::get_line_score(const int x1, const int y1, const int x2
 
     int score = 0;
 
-    for (int i = 0; i < length; ++i)
+    for (int i = 0, end = static_cast<int>(length); i < end; ++i)
     {
-        int x = static_cast<int>(x1 + (dx * i + 0.5)); // 0.5 for rounding when truncating
-        int y = static_cast<int>(y1 + (dy * i + 0.5));
+        int x = static_cast<int>(x1 + (dx * i/*  + 0.5 */)); // 0.5 for rounding when truncating
+        int y = static_cast<int>(y1 + (dy * i/*  + 0.5 */));
+
         score += edited_frame_.at<uint8_t>(y, x); // White value higher than 200
     }
 

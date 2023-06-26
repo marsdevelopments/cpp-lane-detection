@@ -5,13 +5,14 @@
 #include <opencv2/opencv.hpp>
 
 #include "constants.hpp"
+#include "LanePoints.hpp"
 
 class RandomLaneDetection
 {
 public:
     RandomLaneDetection();
 
-    cv::Vec4i find_lines(const cv::Mat &original_frame, const cv::Mat &edited_frame);
+    LanePoints find_lines(const cv::Mat &original_frame, const cv::Mat &edited_frame);
 
 private:
     cv::Mat edited_frame_;
@@ -31,7 +32,7 @@ private:
 private:
     void populate_lines();
 
-    std::array<std::pair<int, int>, cst::lines_array_size> get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max);
+    // std::array<std::pair<int, int>, cst::lines_array_size> get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max);
 
     std::pair<int, int> select_best_line(const std::array<std::pair<int, int>, cst::lines_array_size> &lines);
 
