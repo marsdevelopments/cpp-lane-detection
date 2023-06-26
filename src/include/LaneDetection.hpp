@@ -4,12 +4,16 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "constants.hpp"
+
 class LaneDetection
 {
 public:
     LaneDetection();
 
-    cv::Mat find_lines(const cv::Mat &frame, const cv::Mat& edited_frame);
+    cv::Mat find_lines_hough(const cv::Mat &original_frame, const cv::Mat &edited_frame);
+
+    cv::Mat find_lines_custom(const cv::Mat &original_frame, const cv::Mat &edited_frame);
 
 private:
     static const size_t average_size = 5;
@@ -31,7 +35,8 @@ private:
 
     std::vector<cv::Vec4i> hough_lines_;
 
-    cv::Mat frame_;
+    cv::Mat edited_frame_;
+    cv::Mat original_frame_;
 
 private:
     void clear_averages();
@@ -44,9 +49,17 @@ private:
 
     void draw_from_average(bool drawLeftLane, bool drawRightLane, int y1, int y2);
 
-    void drawLanes();
+    void draw_lanes();
 
-    void houghLines(const cv::Mat& edited_frame, bool drawHough);
+    void build_hough_lines(const cv::Mat &edited_frame, bool drawHough = false);
+
+    void build_random_lines();
+
+    std::array<std::pair<int, int>, cst::lines_array_size> get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max);
+
+    std::pair<int, int> select_best_line(const std::array<std::pair<int, int>, cst::lines_array_size> &lines, const int y_top, const int y_bottom);
+
+    int get_line_score(const int x1, const int y1, const int x2, const int y2);
 
     /**
      * @brief Multiplies two vectors and then calculates the sum of the multiplied values.
@@ -57,7 +70,7 @@ private:
      * @return X sum of the multiplied values.
      */
     template <typename T, typename X>
-    X multiplyAndSum(std::vector<T> A, std::vector<T> B);
+    X multiply_and_sum(std::vector<T> A, std::vector<T> B);
 
     /**
      * @brief Calculates the coefficients (slope and intercept) of the best fitting line
