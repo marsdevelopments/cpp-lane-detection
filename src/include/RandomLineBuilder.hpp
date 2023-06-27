@@ -1,6 +1,7 @@
 #pragma once
 
 #include <numeric>
+#include <random>
 
 #include <opencv2/opencv.hpp>
 
@@ -17,9 +18,9 @@ public:
         std::uniform_int_distribution<int> top_distribution(top_min, top_max);
         std::uniform_int_distribution<int> bottom_distribution(bottom_min, bottom_max);
 
-        std::array<std::pair<int, int>, cst::lines_array_size> output;
+        std::array<std::pair<int, int>, S> output;
 
-        for (int i = 0, end = cst::lines_array_size; i < end; ++i)
+        for (int i = 0, end = S; i < end; ++i)
         {
             std::pair<int, int> line;
             line.first = top_distribution(generator);
@@ -31,10 +32,9 @@ public:
         return output;
     }
 
-    static std::pair<int, int> select_best_line(const std::array<std::pair<int, int>, cst::lines_array_size> &lines, const cv::Mat &processed_frame)
+    template <int S>
+    static std::pair<int, int> select_best_line(const cv::Mat &processed_frame, const std::array<std::pair<int, int>, S> &lines)
     {
-        edited_frame_ = processed_frame;
-
         int best_line_score = -1;
         size_t best_line_index = SIZE_MAX;
 
@@ -42,7 +42,7 @@ public:
         {
             const std::pair<int, int> line = lines.at(i);
 
-            const int line_score = get_line_score(line.first, cst::y_top, line.second, cst::y_bottom);
+            const int line_score = get_line_score(processed_frame, line.first, cst::y_top, line.second, cst::y_bottom);
 
             if (line_score < best_line_score)
                 continue;
@@ -57,25 +57,5 @@ public:
         return lines.at(best_line_index);
     }
 
-    static int get_line_score(const int x1, const int y1, const int x2, const int y2)
-    {
-        const double length = sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)) + 0.0001;
-        double dx = (x2 - x1) / length; // Division by zero safe
-        double dy = (y2 - y1) / length;
-
-        int score = 0;
-
-        for (int i = 0, end = static_cast<int>(length); i < end; ++i)
-        {
-            int x = static_cast<int>(x1 + (dx * i /*  + 0.5 */)); // 0.5 for rounding when truncating
-            int y = static_cast<int>(y1 + (dy * i /*  + 0.5 */));
-
-            score += edited_frame_.at<uint8_t>(y, x); // White value higher than 200
-        }
-
-        return score;
-    }
-
-private:
-    static cv::Mat edited_frame_;
+    static int get_line_score(const cv::Mat &processed_frame, const int x1, const int y1, const int x2, const int y2);
 };

@@ -34,7 +34,7 @@ private:
 
     // std::array<std::pair<int, int>, cst::lines_array_size> get_lines_in_range(const int top_min, const int top_max, const int bottom_min, const int bottom_max);
 
-    std::pair<int, int> select_best_line(const std::array<std::pair<int, int>, cst::lines_array_size> &lines);
+    // std::pair<int, int> select_best_line(const std::array<std::pair<int, int>, cst::lines_array_size> &lines);
 
-    int get_line_score(const int x1, const int y1, const int x2, const int y2);
+    // int get_line_score(const int x1, const int y1, const int x2, const int y2);
 };

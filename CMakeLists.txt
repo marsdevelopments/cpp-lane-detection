@@ -11,11 +11,12 @@ add_executable(cpp-lane-detection
   main.cpp
   src/LanePoints.cpp
   src/PreProcessing.cpp
-  src/LaneDetection.cpp
-  src/RandomLaneDetection.cpp
-  src/RandomLaneTracking.cpp
+  # src/LaneDetection.cpp
+  # src/RandomLaneDetection.cpp
+  src/LaneTracking.cpp
   src/TrackerManager.cpp
+  src/RandomLaneBuilder.cpp
 )
 
 target_link_libraries( cpp-lane-detection ${OpenCV_LIBS} )
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
