@@ -15,7 +15,7 @@ public:
   LanePoints retrack(const cv::Mat& edited_frame, const cv::Mat& debug_frame);
 
 private:
-  static const size_t average_size = 5;
+  static const size_t average_size = 1;
 //   static const int x_center = cst::kVideoWidth / 2;
 
   std::pair<int, int> left_line;
@@ -39,11 +39,11 @@ private:
   size_t missing_frames_counter = 0;
 
   std::array<std::pair<int, int>, average_size> left_average = {
-    { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }
+    { { 0, 0 }/* , { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } */ }
   };
 
   std::array<std::pair<int, int>, average_size> right_average = {
-    { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } }
+    { { 0, 0 }/* , { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } */ }
   };
 
   LanePoints last_lane_points;

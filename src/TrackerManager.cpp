@@ -41,11 +41,12 @@ TrackerManager::start_tracking()
     ++frame_counter;
 
     cv::Mat edited = pre_processor.process_adaptive_threshold(frame.clone());
-    // cv::imshow("Processed", edited);
+    cv::imshow("Processed", edited);
 
     LanePoints result = good_to_retrack
                           ? lane_tracking.retrack(edited, frame)
                           : lane_tracking.restart_tracking(edited, frame);
+    // LanePoints result = lane_tracking.restart_tracking(edited, frame);
 
     good_to_retrack = are_good_to_retrack(result);
 
@@ -56,6 +57,8 @@ TrackerManager::start_tracking()
                 cv::FONT_HERSHEY_PLAIN,
                 1.5,
                 cv::Scalar(255, 255, 255));
+    cv::cvtColor(edited, edited, cv::COLOR_GRAY2BGR);
+    addWeighted(frame, 1, edited, 0.5, 0.0, frame);
     cv::imshow("Lanes", frame);
 
     // Press  ESC on keyboard to exit
@@ -118,17 +121,39 @@ TrackerManager::draw_points(cv::Mat frame, const LanePoints& lane_points)
 bool
 TrackerManager::are_good_to_retrack(const LanePoints& lane_points)
 {
+  // if both are lost
   if (!lane_points.draw_left && !lane_points.draw_right)
     return false;
 
+  // if left line is too close to the center
   const int left_margin = cst::x_center - cst::retrack_x_delta;
   if (lane_points.left_top > left_margin ||
       lane_points.left_bottom > left_margin)
     return false;
 
+  // if right line is too close to the center
   const int right_margin = cst::x_center + cst::retrack_x_delta;
   if (lane_points.right_top < right_margin ||
       lane_points.right_bottom < right_margin)
+    return false;
+
+  const int dy = cst::y_top - cst::y_bottom;
+  // subtrack from what should be closer to the center
+  const int left_dx = lane_points.left_top - lane_points.left_bottom;
+  // if dx is 0, lane is vertical
+  if (left_dx == 0)
+    return false;
+  // if its negative, left lane is facing to the left => should restart tracking
+  if (dy / left_dx < 0.0)
+    return false;
+
+  // subtrack from what should be closer to the center
+  const int right_dx = lane_points.right_top - lane_points.right_bottom;
+  // if dx is 0, lane is vertical
+  if (right_dx == 0)
+    return false;
+  // if its positive, right lane is facing to the right => should restart tracking
+  if (dy / right_dx > 0.0)
     return false;
 
   return true;

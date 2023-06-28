@@ -11,6 +11,7 @@
 int main()
 {
     TrackerManager tracker_manager{"C:\\Users\\Admin\\dev\\projects\\cpp-lane-detection\\videos\\dubai_line_test_full.mp4"};
+    // TrackerManager tracker_manager{"C:\\Users\\Admin\\dev\\projects\\cpp-lane-detection\\videos\\dubai_night.mp4"};
 
     tracker_manager.start_tracking();
 

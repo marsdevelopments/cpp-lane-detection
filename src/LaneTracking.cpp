@@ -4,7 +4,7 @@
 
 #include "RandomLineBuilder.hpp"
 
-#define DEBUG_LANE 0
+#define DEBUG_LANE 1
 
 LanePoints
 LaneTracking::restart_tracking(const cv::Mat& edited_frame,

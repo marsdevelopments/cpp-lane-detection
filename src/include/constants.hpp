@@ -82,7 +82,7 @@ namespace cst
     constexpr int kLaneLineWidth = 25;
 
     constexpr int x_center = cst::kVideoWidth / 2;
-    constexpr size_t lines_array_size = 300;
+    constexpr size_t lines_array_size = 400;
     constexpr size_t retrack_array_size = 75;
     constexpr int retrack_x_delta = 25;
 }
