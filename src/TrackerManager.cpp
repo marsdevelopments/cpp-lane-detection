@@ -86,21 +86,21 @@ TrackerManager::draw_points(cv::Mat frame, const LanePoints& lane_points)
   // bools are true
   cv::Mat dst; // Holds blended image
 
-  if (lane_points.draw_left)
+  if (lane_points.left_found)
     cv::line(frame,
              cv::Point(left_top, cst::y_top),
              cv::Point(left_bottom, cst::y_bottom),
              cv::Scalar(255, 0, 0),
              7);
 
-  if (lane_points.draw_right)
+  if (lane_points.right_found)
     cv::line(frame,
              cv::Point(right_top, cst::y_top),
              cv::Point(right_bottom, cst::y_bottom),
              cv::Scalar(255, 0, 0),
              7);
 
-  if (lane_points.draw_left && lane_points.draw_right) {
+  if (lane_points.left_found && lane_points.right_found) {
     cv::Point pts[4] = {
       cv::Point(left_top, cst::y_top),       // Starting point left lane
       cv::Point(left_bottom, cst::y_bottom), // Ending point left lane
@@ -122,7 +122,7 @@ bool
 TrackerManager::are_good_to_retrack(const LanePoints& lane_points)
 {
   // if both are lost
-  if (!lane_points.draw_left && !lane_points.draw_right)
+  if (!lane_points.left_found && !lane_points.right_found)
     return false;
 
   // if left line is too close to the center

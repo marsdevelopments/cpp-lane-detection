@@ -10,6 +10,18 @@
 class RandomLineBuilder
 {
 public:
+  /**
+   * @brief build a set with size S, containing pairs of top and bottom X
+   * coordinates
+   *
+   * @param S size of returned array
+   * @param top_min minimum top coordinate
+   * @param top_max maximum top coordinate
+   * @param bottom_min minimum bottom coordinate
+   * @param bottom_max maximum bottom coordinate
+   *
+   * @return array of size S with pair of X coordinates
+   */
   template<int S>
   static std::array<std::pair<int, int>, S> build_lines(const int top_min,
                                                         const int top_max,
@@ -38,6 +50,16 @@ public:
     return output;
   }
 
+  /**
+   * @brief select a line which traverses the most white pixels
+   *
+   * @param processed_frame frame in which lines will be tested, should be a
+   * black & white one
+   * @param lines array of pairs with X coordinates to select from
+   *
+   * @return top and bottom X coordinates of the best line or -1, -1 if not
+   * found
+   */
   template<int S>
   static std::pair<int, int> select_best_line(
     const cv::Mat& processed_frame,
@@ -65,6 +87,18 @@ public:
     return lines.at(best_line_index);
   }
 
+  /**
+   * @brief Calculates the ammount of white pixels a given line traverses
+   *
+   * @param processed_frame frame in which lines will be tested, should be a
+   * black & white one
+   * @param x1 top X coordinate
+   * @param y1 top Y coordinate
+   * @param x2 bottom X coordinate
+   * @param y2 bottom Y coordinate
+   *
+   * @return ammount of white pixels given line traverses
+   */
   static int get_line_score(const cv::Mat& processed_frame,
                             const int x1,
                             const int y1,

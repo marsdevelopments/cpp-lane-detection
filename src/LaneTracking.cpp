@@ -54,21 +54,19 @@ LaneTracking::restart_tracking(const cv::Mat& edited_frame,
   const std::pair<int, int> right_line =
     RandomLineBuilder::select_best_line(edited_frame_, right_lines);
 
-  const bool draw_left_lane = left_line.first != -1 || left_line.second != -1;
-  const bool draw_right_lane =
+  const bool left_line_found = left_line.first != -1 || left_line.second != -1;
+  const bool right_line_found =
     right_line.first != -1 || right_line.second != -1;
 
-  if (draw_left_lane)
+  if (left_line_found)
     add_left_average(left_line.first, left_line.second);
 
-  if (draw_right_lane)
+  if (right_line_found)
     add_right_average(right_line.first, right_line.second);
 
-  last_lane_points = get_from_average(draw_left_lane, draw_right_lane);
+  last_lane_points = get_from_average(left_line_found, right_line_found);
 
   return last_lane_points;
-
-  // track_lines(false);
 }
 
 LanePoints
@@ -124,17 +122,17 @@ LaneTracking::retrack(const cv::Mat& edited_frame, const cv::Mat& debug_frame)
   const std::pair<int, int> right_line =
     RandomLineBuilder::select_best_line(edited_frame_, right_lines);
 
-  const bool draw_left_lane = left_line.first != -1 || left_line.second != -1;
-  const bool draw_right_lane =
+  const bool left_line_found = left_line.first != -1 || left_line.second != -1;
+  const bool right_line_found =
     right_line.first != -1 || right_line.second != -1;
 
-  if (draw_left_lane)
+  if (left_line_found)
     add_left_average(left_line.first, left_line.second);
 
-  if (draw_right_lane)
+  if (right_line_found)
     add_right_average(right_line.first, right_line.second);
 
-  last_lane_points = get_from_average(draw_left_lane, draw_right_lane);
+  last_lane_points = get_from_average(left_line_found, right_line_found);
 
   return last_lane_points;
 }
@@ -214,21 +212,21 @@ LaneTracking::get_right_average()
 }
 
 LanePoints
-LaneTracking::get_from_average(bool draw_left_lane, bool draw_right_lane)
+LaneTracking::get_from_average(bool left_line_found, bool right_line_found)
 {
   const LanePoints default_points;
 
   const std::pair<int, int> left = get_left_average();
   const std::pair<int, int> right = get_right_average();
 
-  if (draw_right_lane && draw_left_lane) {
+  if (right_line_found && left_line_found) {
     missing_frames_counter = 0;
 
     if (long_missing_flag) {
       long_missing_flag = false;
       return default_points;
     }
-  } else if (!draw_right_lane && !draw_left_lane) {
+  } else if (!right_line_found && !left_line_found) {
     ++missing_frames_counter;
   }
 
@@ -238,6 +236,6 @@ LaneTracking::get_from_average(bool draw_left_lane, bool draw_right_lane)
     return default_points;
   }
 
-  return LanePoints{ left.first,   left.second,    right.first,
-                     right.second, draw_left_lane, draw_right_lane };
+  return LanePoints{ left.first,   left.second,     right.first,
+                     right.second, left_line_found, right_line_found };
 }

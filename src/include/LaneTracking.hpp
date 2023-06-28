@@ -10,23 +10,35 @@
 class LaneTracking
 {
 public:
-  LanePoints restart_tracking(const cv::Mat& edited_frame, const cv::Mat& debug_frame);
+  /**
+   * @brief Start lane tracking from scrath, and search the whole ROI
+   *
+   * @param edited_frame edited frame by PreProcessing in which search will be
+   * done
+   * @param debug_frame frame on which debug lines will be drawn
+   *
+   * @return found lane points
+   */
+  LanePoints restart_tracking(const cv::Mat& edited_frame,
+                              const cv::Mat& debug_frame);
 
+  /**
+   * @brief Search in a limited area, defined by previously found lane points
+   * and @ref cst::retrack_x_delta
+   *
+   * @param edited_frame edited frame by PreProcessing in which search will be
+   * done
+   * @param debug_frame frame on which debug lines will be drawn
+   *
+   * @return found lane points
+   */
   LanePoints retrack(const cv::Mat& edited_frame, const cv::Mat& debug_frame);
 
 private:
   static const size_t average_size = 1;
-//   static const int x_center = cst::kVideoWidth / 2;
 
   std::pair<int, int> left_line;
   std::pair<int, int> right_line;
-
-  // std::array<std::pair<int, int>, cst::lines_array_size> left_lines_;
-  // std::array<std::pair<int, int>, cst::lines_array_size> right_lines_;
-
-  // std::array<std::pair<int, int>, cst::lines_array_size / 2>
-  // retrack_left_lines_; std::array<std::pair<int, int>, cst::lines_array_size
-  // / 2> retrack_right_lines_;
 
   const int bottom_left_x_ = cst::trapezoid_roi_points.at(0).x;
   const int top_left_x_ = cst::trapezoid_roi_points.at(1).x;
@@ -39,54 +51,69 @@ private:
   size_t missing_frames_counter = 0;
 
   std::array<std::pair<int, int>, average_size> left_average = {
-    { { 0, 0 }/* , { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } */ }
+    { { 0, 0 } /* , { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } */ }
   };
 
   std::array<std::pair<int, int>, average_size> right_average = {
-    { { 0, 0 }/* , { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } */ }
+    { { 0, 0 } /* , { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } */ }
   };
 
   LanePoints last_lane_points;
 
 private:
+  /**
+   * @brief Replace all numbers averages arrays with zero
+   */
   void clear_averages();
 
+  /**
+   * @brief Add a number to an average array
+   *
+   * @param source array into which to add values
+   * @param x1 top-side x value
+   * @param x2 bottom-side x value
+   */
   void add_average(std::array<std::pair<int, int>, average_size>& source,
                    const int& x1,
                    const int& x2);
-
+  /**
+   * @brief Add a number to an left-side average array
+   *
+   * @param x1 top-side x value
+   * @param x2 bottom-side x value
+   */
   void add_left_average(const int& x1, const int& x2);
-
+  /**
+   * @brief Add a number to an right-side average array
+   *
+   * @param x1 top-side x value
+   * @param x2 bottom-side x value
+   */
   void add_right_average(const int& x1, const int& x2);
 
+  /**
+   * @brief Get average values from an average array
+   *
+   * @param source array from which to compute the average value
+   */
   std::pair<int, int> get_average(
     const std::array<std::pair<int, int>, average_size>& source);
-
+  /**
+   * @brief Get average values from left-side average array
+   */
   std::pair<int, int> get_left_average();
-
+  /**
+   * @brief Get average values from left-side average array
+   */
   std::pair<int, int> get_right_average();
 
-  LanePoints get_from_average(bool drawLeftLane, bool drawRightLane);
-
-  // template <size_t S>
-  // void track_lines(const bool retrack)
-  // {
-  //     const std::array<std::pair<int, int>, S> left_lines_ =
-  //     RandomLineBuilder::build_lines<S>(top_left_x_, x_center,
-  //     bottom_left_x_, x_center); const std::array<std::pair<int, int>, S>
-  //     right_lines_;
-
-  //     left_lines_;
-  //     right_lines_ =
-  //     RandomLineBuilder::build_lines<cst::lines_array_size>(x_center,
-  //     top_right_x_, x_center, bottom_right_x_);
-
-  //     const std::pair<int, int> left_line =
-  //     RandomLineBuilder::select_best_line(edited_frame_, left_lines_); const
-  //     std::pair<int, int> right_line =
-  //     RandomLineBuilder::select_best_line(edited_frame_, right_lines_);
-  // }
-
-  // void draw_points(const std::pair<int, int> &left, const std::pair<int, int>
-  // &right);
+  /**
+   * @brief Compact average array results into LanePoints and manage the moving average filter
+   *
+   * @param left_line_found was left line found
+   * @param right_line_found was right line found
+   * 
+   * @return found lane points
+   */
+  LanePoints get_from_average(bool left_line_found, bool right_line_found);
 };

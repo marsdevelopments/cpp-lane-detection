@@ -11,8 +11,6 @@ add_executable(cpp-lane-detection
   main.cpp
   src/LanePoints.cpp
   src/PreProcessing.cpp
-  # src/LaneDetection.cpp
-  # src/RandomLaneDetection.cpp
   src/LaneTracking.cpp
   src/TrackerManager.cpp
   src/RandomLaneBuilder.cpp
