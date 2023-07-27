@@ -70,11 +70,13 @@ void PreProcessing::apply_thresholding()
 
 void PreProcessing::apply_adaptive_thresholding()
 {
+    // apply current threshold value, and extract ammount of resulting white pixels
     cv::Mat frame_copy = frame_.clone();
     cv::threshold(frame_copy, frame_copy, current_threshold_, 255, cv::ThresholdTypes::THRESH_BINARY);
     const int white_ammount = cv::countNonZero(frame_copy);
 
-    set_threshold(white_ammount);
+    // change the threshold if ammount of white pixels is not acceptable
+    try_set_threshold(white_ammount);
 
     cv::threshold(frame_, frame_, current_threshold_, 255, 0);
 
@@ -86,27 +88,31 @@ void PreProcessing::apply_adaptive_thresholding()
 #endif
 }
 
-void PreProcessing::set_threshold(const int &white_ammount)
+void PreProcessing::try_set_threshold(const int &white_ammount)
 {
     if (is_white_ammount_acceptable(white_ammount))
         return;
-
-    const int average_threshold = (min_threshold_ + max_threshold_) / 2;
 
 #if DEBUG_PROC
     std::string text;
 #endif
 
-    if (white_ammount > max_white) // if there are too much white pixels => threshold should be increased
+    // if there are too much white pixels =>
+    // threshold should be increased to decrease the ammount of white pixels
+    if (white_ammount > max_white) 
     {
+        // new threshold value is average between current value and maximum possible value
         current_threshold_ = (max_threshold_ + current_threshold_) / 2;
 
 #if DEBUG_PROC
         text = "Incresing threshold...: ";
 #endif
     }
-    else // if it is not too much, it is too little => threshold should be descreased
+    // if not, there are too little white pixels =>
+    // threshold should be decreased to increase the ammount of white pixels
+    else 
     {
+        // new threshold value is average between current value and minimum possible value
         current_threshold_ = (min_threshold_ + current_threshold_) / 2;
 
 #if DEBUG_PROC

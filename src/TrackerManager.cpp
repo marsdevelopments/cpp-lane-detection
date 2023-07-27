@@ -40,6 +40,7 @@ TrackerManager::start_tracking()
 
     ++frame_counter;
 
+    // process frame using adaptive threshold method
     cv::Mat edited = pre_processor.process_adaptive_threshold(frame.clone());
     cv::imshow("Processed", edited);
 
@@ -48,6 +49,7 @@ TrackerManager::start_tracking()
                           : lane_tracking.restart_tracking(edited, frame);
     // LanePoints result = lane_tracking.restart_tracking(edited, frame);
 
+    // check if lane points are valid
     good_to_retrack = are_good_to_retrack(result);
 
     frame = draw_points(frame, result);
@@ -88,24 +90,24 @@ TrackerManager::draw_points(cv::Mat frame, const LanePoints& lane_points)
 
   if (lane_points.left_found)
     cv::line(frame,
-             cv::Point(left_top, cst::y_top),
-             cv::Point(left_bottom, cst::y_bottom),
+             cv::Point(left_top, cst::kTopY),
+             cv::Point(left_bottom, cst::kBottomY),
              cv::Scalar(255, 0, 0),
              7);
 
   if (lane_points.right_found)
     cv::line(frame,
-             cv::Point(right_top, cst::y_top),
-             cv::Point(right_bottom, cst::y_bottom),
+             cv::Point(right_top, cst::kTopY),
+             cv::Point(right_bottom, cst::kBottomY),
              cv::Scalar(255, 0, 0),
              7);
 
   if (lane_points.left_found && lane_points.right_found) {
     cv::Point pts[4] = {
-      cv::Point(left_top, cst::y_top),       // Starting point left lane
-      cv::Point(left_bottom, cst::y_bottom), // Ending point left lane
-      cv::Point(right_top, cst::y_bottom),   // Ending point right lane
-      cv::Point(right_bottom, cst::y_top)    // Starting point right lane
+      cv::Point(left_top, cst::kTopY),       // Starting point left lane
+      cv::Point(left_bottom, cst::kBottomY), // Ending point left lane
+      cv::Point(right_top, cst::kBottomY),   // Ending point right lane
+      cv::Point(right_bottom, cst::kTopY)    // Starting point right lane
     };
 
     // cv::fillConvexPoly(mask, pts, 4, cv::Scalar(235, 229, 52)); // Color is
@@ -126,24 +128,27 @@ TrackerManager::are_good_to_retrack(const LanePoints& lane_points)
     return false;
 
   // if left line is too close to the center
-  const int left_margin = cst::x_center - cst::retrack_x_delta;
+  const int left_margin = cst::kCenterX - cst::kRetrackDeltaX;
   if (lane_points.left_top > left_margin ||
       lane_points.left_bottom > left_margin)
     return false;
 
   // if right line is too close to the center
-  const int right_margin = cst::x_center + cst::retrack_x_delta;
+  const int right_margin = cst::kCenterX + cst::kRetrackDeltaX;
   if (lane_points.right_top < right_margin ||
       lane_points.right_bottom < right_margin)
     return false;
 
-  const int dy = cst::y_top - cst::y_bottom;
+  // calculate line slopes
+  
+  // dy is the same for both lines
+  const int dy = cst::kTopY - cst::kBottomY;
   // subtrack from what should be closer to the center
   const int left_dx = lane_points.left_top - lane_points.left_bottom;
   // if dx is 0, lane is vertical
   if (left_dx == 0)
     return false;
-  // if its negative, left lane is facing to the left => should restart tracking
+  // if slope is negative, left line is facing to the left => should restart tracking
   if (dy / left_dx < 0.0)
     return false;
 
@@ -152,9 +157,10 @@ TrackerManager::are_good_to_retrack(const LanePoints& lane_points)
   // if dx is 0, lane is vertical
   if (right_dx == 0)
     return false;
-  // if its positive, right lane is facing to the right => should restart tracking
+  // if slope is positive, right lane is facing to the right => should restart tracking
   if (dy / right_dx > 0.0)
     return false;
 
+  // if neither of previous tests failed, lane is good to retrack
   return true;
 }

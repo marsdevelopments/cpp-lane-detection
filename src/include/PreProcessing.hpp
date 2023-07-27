@@ -6,13 +6,14 @@
 
 #define DEBUG_PROC 0
 
+// pre-processing an input image to prepare it for lane detection
 class PreProcessing
 {
 public:
     PreProcessing();
 
     /**
-     * @brief Proccess a frame using threshold method.
+     * @brief Proccess a frame using constant threshold method
      *
      * @param source frame that needs to be processed
      * @return Processed frame
@@ -20,7 +21,8 @@ public:
     cv::Mat process_threshold(const cv::Mat &source);
 
     /**
-     * @brief Proccess a frame using adaptive threshold method
+     * @brief Proccess a frame using adaptive threshold method.
+     * Threshold will be adapted based on the resulting ammount of white pixels
      *
      * @param source frame that needs to be processed
      * @return processed frame
@@ -80,9 +82,10 @@ private:
     bool is_white_ammount_acceptable(const int &ammount);
 
     /**
-     * @brief Set the threshold which will be used to threshold the stored frame
+     * @brief Set the threshold value which will be used to threshold the stored frame.
+     * New threshold will be an average between current one and one of the extremes
      */
-    void set_threshold(const int &white_ammount);
+    void try_set_threshold(const int &white_ammount);
 
 #pragma endregion
 

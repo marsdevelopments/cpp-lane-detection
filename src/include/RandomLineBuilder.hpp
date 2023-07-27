@@ -14,11 +14,11 @@ public:
    * @brief build a set with size S, containing pairs of top and bottom X
    * coordinates
    *
-   * @param S size of returned array
-   * @param top_min minimum top coordinate
-   * @param top_max maximum top coordinate
-   * @param bottom_min minimum bottom coordinate
-   * @param bottom_max maximum bottom coordinate
+   * @param S size of the returned array
+   * @param top_min minimum possible top coordinate
+   * @param top_max maximum possible top coordinate
+   * @param bottom_min minimum possible bottom coordinate
+   * @param bottom_max maximum possible bottom coordinate
    *
    * @return array of size S with pair of X coordinates
    */
@@ -30,12 +30,14 @@ public:
   {
     std::random_device r;
     std::default_random_engine generator{ r() };
+
     std::uniform_int_distribution<int> top_distribution(
-      (top_min >= 0 ? top_min : 0),
-      (top_max <= cst::kVideoWidth ? top_max : cst::kVideoWidth));
+      (top_min < 0 ? 0 : top_min),
+      (top_max > cst::kVideoWidth ? cst::kVideoWidth : top_max));
+
     std::uniform_int_distribution<int> bottom_distribution(
-      (bottom_min >= 0 ? bottom_min : 0),
-      (bottom_max <= cst::kVideoWidth ? bottom_max : cst::kVideoWidth));
+      (bottom_min < 0 ? 0 : bottom_min),
+      (bottom_max > cst::kVideoWidth ? cst::kVideoWidth : bottom_max));
 
     std::array<std::pair<int, int>, S> output;
 
@@ -53,8 +55,8 @@ public:
   /**
    * @brief select a line which traverses the most white pixels
    *
-   * @param processed_frame frame in which lines will be tested, should be a
-   * black & white one
+   * @param processed_frame frame in which lines will be tested,
+   * should be a processed, black & white one
    * @param lines array of pairs with X coordinates to select from
    *
    * @return top and bottom X coordinates of the best line or -1, -1 if not
@@ -72,7 +74,7 @@ public:
       const std::pair<int, int> line = lines.at(i);
 
       const int line_score = get_line_score(
-        processed_frame, line.first, cst::y_top, line.second, cst::y_bottom);
+        processed_frame, line.first, cst::kTopY, line.second, cst::kBottomY);
 
       if (line_score < best_line_score)
         continue;

@@ -6,6 +6,7 @@
 
 #include "LanePoints.hpp"
 
+// manager of whole operation
 class TrackerManager
 {
 public:
